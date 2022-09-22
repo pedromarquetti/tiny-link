@@ -1,5 +1,15 @@
 // https://www.goldsborough.me/rust/web/tutorial/2018/01/20/17-01-11-writing_a_microservice_in_rust/
 // https://www.secretfader.com/blog/2019/01/parsing-validating-assembling-urls-rust/
+
+mod db;
+mod error;
+mod parser;
+mod response;
+mod structs;
+use crate::db::write_to_db;
+use crate::parser::parse_form;
+use crate::response::post_response;
+
 extern crate futures;
 extern crate hyper;
 
@@ -8,103 +18,13 @@ extern crate log;
 extern crate env_logger;
 extern crate serde_json;
 
-use futures::{
-    future::{Future, FutureResult},
-    Stream,
-};
+use futures::{future::Future, Stream};
 use hyper::{
-    header::{ContentLength, ContentType},
-    server::{Http, Request, Response, Server, Service},
-    Body,
-    Method::{Get, Post},
-    StatusCode,
-    {
-        Chunk, Error,
-        StatusCode::{Found, InternalServerError, NotFound},
-    },
+    server::{Http, Request, Response, Service},
+    Method::Post,
+    {Error, StatusCode::NotFound},
 };
-use serde_json::json;
-use std::collections::HashMap;
-use std::io;
 use std::net::SocketAddr;
-use url::{form_urlencoded, ParseError, Url};
-
-#[derive(Eq, Hash, PartialEq)]
-struct LongUrl {
-    url: String,
-}
-
-/// Checks if received data matches `LongUrl` using a HashMap
-/// returns error if no "url" field is supplied
-fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
-    let mut form: HashMap<String, String> = form_urlencoded::parse(form_chunk.as_ref())
-        .into_owned()
-        .collect::<HashMap<String, String>>();
-    if !form.contains_key("url") {
-        futures::future::err(Error::from(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Missing URL",
-        )))
-    } else {
-        let cur_url = form.remove("url").unwrap();
-        if cur_url.contains(" ") || cur_url == String::from("") {
-            futures::future::err(Error::from(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Invalid URL",
-            )))
-        } else {
-            futures::future::ok(LongUrl { url: cur_url })
-        }
-    }
-}
-
-/// writes received long URL to db, returns short Url that will be echoed to user
-fn write_to_db(entry: LongUrl) -> FutureResult<LongUrl, Error> {
-    // TODO: save 'entry' to db...
-
-    futures::future::ok(entry)
-}
-
-fn make_error_response(
-    error_message: &str,
-    error_code: StatusCode,
-) -> FutureResult<Response, Error> {
-    let payload: String = json!({ "error": error_message }).to_string();
-    let response: Response = Response::new()
-        .with_status(error_code)
-        .with_header(ContentLength(payload.len() as u64))
-        .with_header(ContentType::json())
-        .with_body(payload);
-    info!("ERROR> {:?}", response);
-    futures::future::ok(response) // sending response
-}
-
-/// Send back response to user
-fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Error> {
-    match res {
-        Ok(success_result) => {
-            let payload: String = json!(
-                { "url": success_result.url }
-            )
-            .to_string();
-            let response: Response = Response::new()
-                .with_header(ContentLength(payload.len() as u64))
-                .with_header(ContentType::json())
-                .with_body(payload);
-            info!("Response sent: {:?}", response);
-
-            futures::future::ok(response) // sending response
-        }
-        Err(error) => {
-            let msg: String = error.to_string();
-
-            match msg.as_str() {
-                "Missing URL" | "Invalid URL" => make_error_response(&msg, StatusCode::BadRequest),
-                _ => make_error_response("Error ", StatusCode::InternalServerError),
-            }
-        }
-    }
-}
 
 /// Main Struct
 /// Contains `call` function
