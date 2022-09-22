@@ -49,7 +49,7 @@ fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
         let cur_url = form.remove("url").unwrap();
         if cur_url.contains(" ") || cur_url == String::from("") {
             futures::future::err(Error::from(io::Error::new(
-                io::ErrorKind::InvalidInput,
+                io::ErrorKind::InvalidData,
                 "Invalid URL",
             )))
         } else {
@@ -67,11 +67,11 @@ fn write_to_db(entry: LongUrl) -> FutureResult<LongUrl, Error> {
 
 fn make_error_response(
     error_message: &str,
-    error_type: StatusCode,
+    error_code: StatusCode,
 ) -> FutureResult<Response, Error> {
     let payload: String = json!({ "error": error_message }).to_string();
     let response: Response = Response::new()
-        .with_status(error_type)
+        .with_status(error_code)
         .with_header(ContentLength(payload.len() as u64))
         .with_header(ContentType::json())
         .with_body(payload);
@@ -91,10 +91,18 @@ fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Error> {
                 .with_header(ContentLength(payload.len() as u64))
                 .with_header(ContentType::json())
                 .with_body(payload);
+            info!("Response sent: {:?}", response);
 
             futures::future::ok(response) // sending response
         }
-        Err(error) => make_error_response(&error.to_string(), InternalServerError),
+        Err(error) => {
+            let msg: String = error.to_string();
+
+            match msg.as_str() {
+                "Missing URL" | "Invalid URL" => make_error_response(&msg, StatusCode::BadRequest),
+                _ => make_error_response("Error ", StatusCode::InternalServerError),
+            }
+        }
     }
 }
 
