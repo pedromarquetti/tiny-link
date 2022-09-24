@@ -1,3 +1,3 @@
 pub struct LongUrl {
-    pub url: String,
+    pub long_url: String,
 }
