@@ -17,6 +17,6 @@ pub fn make_error_response(
         .with_header(ContentLength(payload.len() as u64))
         .with_header(ContentType::json())
         .with_body(payload);
-    info!("ERROR> {:?}", response);
+    info!("ERROR {:?}", response);
     futures::future::ok(response) // sending response
 }
