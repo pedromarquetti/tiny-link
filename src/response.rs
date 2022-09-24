@@ -5,6 +5,7 @@ use hyper::{
     server::Response,
     Error, StatusCode,
 };
+
 use serde_json::json;
 
 /// Send back response to user
@@ -12,7 +13,7 @@ pub fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Erro
     match res {
         Ok(success_result) => {
             let payload: String = json!(
-                { "url": success_result.url }
+                { "url": success_result.long_url }
             )
             .to_string();
             let response: Response = Response::new()
@@ -27,8 +28,13 @@ pub fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Erro
             let msg: String = error.to_string();
 
             match msg.as_str() {
-                "Missing URL" | "Invalid URL" => make_error_response(&msg, StatusCode::BadRequest),
-                _ => make_error_response("Error ", StatusCode::InternalServerError),
+                "Missing URL"
+                | "No empty strings or spaces!"
+                | "Could not parse URL, relative URL without a base"
+                | "Could not parse URL, empty host" => {
+                    make_error_response(&msg, StatusCode::BadRequest)
+                }
+                _ => make_error_response("Internal server Error!", StatusCode::InternalServerError),
             }
         }
     }

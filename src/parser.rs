@@ -4,7 +4,7 @@ use hyper::{Chunk, Error};
 use std::collections::HashMap;
 use std::io;
 
-use url::form_urlencoded;
+use url::{form_urlencoded, Url};
 
 /// Checks if received data matches `LongUrl` using a HashMap
 /// returns error if no "url" field is supplied
@@ -18,14 +18,31 @@ pub fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
             "Missing URL",
         )))
     } else {
-        let cur_url = form.remove("url").unwrap();
-        if cur_url.contains(" ") || cur_url == String::from("") {
+        let input = form.remove("url").unwrap();
+
+        if input.contains(" ") || input == String::from("") {
             futures::future::err(Error::from(io::Error::new(
                 io::ErrorKind::InvalidData,
-                "Invalid URL",
+                "No empty strings or spaces!",
             )))
         } else {
-            futures::future::ok(LongUrl { url: cur_url })
+            let url = Url::parse(&input);
+            match url {
+                Ok(url) => {
+                    info!("Parse Successful");
+                    futures::future::ok(LongUrl {
+                        long_url: url.to_string(),
+                    })
+                }
+                Err(err) => {
+                    info!("Parse Error>> {:}", err.to_string());
+                    futures::future::err(Error::from(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        format!("Could not parse URL, {}", err.to_string()),
+                    )))
+                }
+            }
+            // futures::future::ok(LongUrl { url: input })
         }
     }
 }
