@@ -14,7 +14,7 @@ pub fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
     if !form.contains_key("url") {
         futures::future::err(Error::from(io::Error::new(
             io::ErrorKind::InvalidInput,
-            "Missing URL",
+            "Missing URL param",
         )))
     } else {
         let input = form.remove("url").unwrap();
@@ -35,29 +35,4 @@ pub fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
             }
         }
     }
-
-    // if input.contains(" ") || input == String::from("") {
-    //     futures::future::err(Error::from(io::Error::new(
-    //         io::ErrorKind::InvalidData,
-    //         "No empty strings or spaces!",
-    //     )))
-    // } else {
-    //     let url = Url::parse(&input);
-    //     match url {
-    //         Ok(url) => {
-    //             info!("Parse Successful");
-    //             futures::future::ok(LongUrl {
-    //                 long_url: url.to_string(),
-    //             })
-    //         }
-    //         Err(err) => {
-    //             info!("Parse Error>> {:}", err.to_string());
-    //             futures::future::err(Error::from(io::Error::new(
-    //                 io::ErrorKind::InvalidData,
-    //                 format!("Could not parse URL, {}", err.to_string()),
-    //             )))
-    //         }
-    //     }
-    //     // futures::future::ok(LongUrl { url: input })
-    // }
 }
