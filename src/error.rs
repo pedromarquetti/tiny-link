@@ -6,7 +6,7 @@ use hyper::{
 };
 use serde_json::json;
 
-/// Makes error Response based on suplied parameters
+/// Returns error Response based on suplied parameters
 pub fn make_error_response(
     error_message: &str,
     error_code: StatusCode,
