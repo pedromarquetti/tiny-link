@@ -17,7 +17,7 @@ pub fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
             "Missing URL param",
         )))
     } else {
-        let input = form.remove("url").unwrap();
+        let input: String = form.remove("url").unwrap();
         let url: Result<Url, ParseError> = Url::parse(&input);
         match url {
             Ok(url) => {
