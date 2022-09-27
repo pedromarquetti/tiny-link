@@ -20,7 +20,7 @@ pub fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Erro
                 .with_header(ContentLength(payload.len() as u64))
                 .with_header(ContentType::json())
                 .with_body(payload);
-            info!("Response sent: {:?}", response);
+            info!("Success Response sent: {:?}", response);
 
             futures::future::ok(response) // sending response
         }
@@ -31,10 +31,15 @@ pub fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Erro
                 "Missing URL"
                 | "No empty strings or spaces!"
                 | "Could not parse URL, relative URL without a base"
-                | "Could not parse URL, empty host" => {
+                | "Could not parse URL, empty host"
+                | "Could not parse URL, invalid domain character"
+                | "Could not parse URL, invalid IPv4 address" => {
                     make_error_response(&msg, StatusCode::BadRequest)
                 }
-                _ => make_error_response("Internal server Error!", StatusCode::InternalServerError),
+                err => make_error_response(
+                    format!("Internal server Error! {}", err).as_str(),
+                    StatusCode::InternalServerError,
+                ),
             }
         }
     }
