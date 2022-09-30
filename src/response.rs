@@ -3,7 +3,8 @@ use futures::future::FutureResult;
 use hyper::{
     header::{ContentLength, ContentType},
     server::Response,
-    Error, StatusCode,
+    Error,
+    StatusCode::{BadRequest, InternalServerError},
 };
 
 use serde_json::json;
@@ -34,11 +35,11 @@ pub fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Erro
                 | "Could not parse URL, empty host"
                 | "Could not parse URL, invalid domain character"
                 | "Could not parse URL, invalid IPv4 address" => {
-                    make_error_response(&msg, StatusCode::BadRequest)
+                    make_error_response(&msg, BadRequest)
                 }
                 err => make_error_response(
                     format!("Internal server Error! {}", err).as_str(),
-                    StatusCode::InternalServerError,
+                    InternalServerError,
                 ),
             }
         }
