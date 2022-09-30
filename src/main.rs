@@ -21,7 +21,7 @@ extern crate serde_json;
 use futures::{future::Future, Stream};
 use hyper::{
     server::{Http, Request, Response, Service},
-    Method::Post,
+    Method::{Get, Post},
     {Error, StatusCode::NotFound},
 };
 use std::net::SocketAddr;
@@ -36,8 +36,8 @@ impl Service for Shortener {
     type Future = Box<dyn Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        match (req.method(), req.path()) {
-            (&Post, "/") => {
+        match req.method() {
+            &Post => {
                 let fut = req
                     .body()
                     .concat2()
@@ -48,6 +48,19 @@ impl Service for Shortener {
                 // add future to Heap memory
                 Box::new(fut)
             }
+            &Get => {
+                let path = req.path();
+                info!("{:}", path);
+
+                let res = req
+                    .body()
+                    .concat2()
+                    .and_then(parse_form)
+                    .and_then(write_to_db) // TODO
+                    .then(post_response);
+                Box::new(res)
+            }
+
             _ => Box::new(futures::future::ok(Response::new().with_status(NotFound))),
         }
     }
