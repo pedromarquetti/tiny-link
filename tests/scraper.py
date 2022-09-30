@@ -13,6 +13,12 @@ def main():
 
         print(post.text)
         print(post.status_code)
+        get = req.request(
+            "GET",
+            r"http://localhost:8080",
+
+        )
+        print(get.text)
     except Exception as e:
         print(f"{e} occurred. Exiting")
 
