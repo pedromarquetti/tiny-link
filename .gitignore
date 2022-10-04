@@ -1,6 +1,6 @@
 /target
 tests/tempCodeRunnerFile.py
-
+.vscode
 # Python gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
