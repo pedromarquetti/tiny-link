@@ -1,7 +1,21 @@
-/target
+### VSCode
 tests/tempCodeRunnerFile.py
 .vscode
-# Python gitignore
+*.session.sql
+
+
+### sql 
+
+migrations
+
+### Diesel Gitignore
+*/target/*
+output.log
+build
+.DS_Store
+target
+
+### Python gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
