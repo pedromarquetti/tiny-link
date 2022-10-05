@@ -7,7 +7,7 @@ use url::{form_urlencoded, ParseError, Url};
 
 /// Checks if received data matches `LongUrl` using a HashMap
 /// returns error if no "url" field is supplied
-pub fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
+pub fn parse_form(form_chunk: Chunk) -> FutureResult<String, Error> {
     let mut form: HashMap<String, String> = form_urlencoded::parse(form_chunk.as_ref())
         .into_owned()
         .collect::<HashMap<String, String>>();
@@ -22,9 +22,7 @@ pub fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
         match url {
             Ok(url) => {
                 info!("Parse Successful");
-                futures::future::ok(LongUrl {
-                    long_url: url.to_string(),
-                })
+                futures::future::ok(url.to_string())
             }
             Err(err) => {
                 info!("Parse Error>> {:}", err.to_string());
@@ -34,5 +32,16 @@ pub fn parse_form(form_chunk: Chunk) -> FutureResult<LongUrl, Error> {
                 )))
             }
         }
+    }
+}
+
+/// Checks if specified path matches requirements
+pub fn validate_path(path: &str) -> Result<&str, &str> {
+    if path.len() <= 1 {
+        error!("Invalid Path!");
+        Err("Invalid Path")
+    } else {
+        info!("path info> {}", path.len());
+        Ok(path)
     }
 }
