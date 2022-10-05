@@ -84,16 +84,16 @@ impl Service for Shortener {
                 Box::new(fut)
             }
             &Get => {
-                let path: &str = req.path();
-                let validator: Result<&str, &str> = validate_path(path);
+                let path: String = req.path().to_string();
+                let validator: Result<String, String> = validate_path(path);
 
                 let response = match validator {
                     Ok(ok_value) => {
                         // valid path,
                         // query db
-                        get_response(ok_value)
+                        get_response(&ok_value)
                     }
-                    Err(err) => make_error_response(err, NotFound),
+                    Err(err) => make_error_response(&err, NotFound),
                 };
 
                 Box::new(response)

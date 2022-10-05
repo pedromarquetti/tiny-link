@@ -36,12 +36,14 @@ pub fn parse_form(form_chunk: Chunk) -> FutureResult<String, Error> {
 }
 
 /// Checks if specified path matches requirements
-pub fn validate_path(path: &str) -> Result<&str, &str> {
+pub fn validate_path(mut path: String) -> Result<String, String> {
     if path.len() <= 1 {
         error!("Invalid Path!");
-        Err("Invalid Path")
+        Err("Invalid Path".to_string())
     } else {
         info!("path info> {}", path.len());
-        Ok(path)
+        path.remove(0); // removing '/' from the recvd path
+
+        Ok(path.to_string())
     }
 }
