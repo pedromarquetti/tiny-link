@@ -1,14 +1,23 @@
 // https://www.goldsborough.me/rust/web/tutorial/2018/01/20/17-01-11-writing_a_microservice_in_rust/
 // https://www.secretfader.com/blog/2019/01/parsing-validating-assembling-urls-rust/
 
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate diesel;
+
+mod models;
+mod schema;
+
 mod db;
 mod error;
 mod parser;
 mod response;
 mod structs;
-use crate::db::write_to_db;
-use crate::parser::parse_form;
+use crate::error::make_error_response;
+use crate::parser::{parse_form, validate_path};
 use crate::response::post_response;
+use crate::{db::write_to_db, response::get_response};
 
 extern crate futures;
 extern crate hyper;
@@ -18,13 +27,31 @@ extern crate log;
 extern crate env_logger;
 extern crate serde_json;
 
+use diesel::{pg::PgConnection, Connection};
+
 use futures::{future::Future, Stream};
 use hyper::{
     server::{Http, Request, Response, Service},
+    Error,
     Method::{Get, Post},
-    {Error, StatusCode::NotFound},
+    StatusCode::{InternalServerError, NotFound},
 };
 use std::net::SocketAddr;
+
+use std::env;
+
+const DEFAULT_DATABASE_URL: &'static str = "postgresql://postgres@localhost:5432";
+
+fn connect_to_db() -> Option<PgConnection> {
+    let database_url = env::var("DATABASE_URL").unwrap_or(String::from(DEFAULT_DATABASE_URL));
+    match PgConnection::establish(&database_url) {
+        Ok(connection) => Some(connection),
+        Err(error) => {
+            error!("Error connecting to database: {}", error);
+            None
+        }
+    }
+}
 
 /// Main Struct
 /// Contains `call` function
@@ -36,32 +63,47 @@ impl Service for Shortener {
     type Future = Box<dyn Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
+        let db_connection = match connect_to_db() {
+            Some(connection) => connection,
+            None => {
+                return Box::new(futures::future::ok(
+                    Response::new().with_status(InternalServerError),
+                ))
+            }
+        };
         match req.method() {
             &Post => {
                 let fut = req
                     .body()
                     .concat2()
-                    .and_then(parse_form)
-                    .and_then(write_to_db) // TODO
+                    .and_then(parse_form) // checks if it's a valid form
+                    .and_then(move |long_url| write_to_db(long_url, &db_connection)) // TODO: will submit result to DB
                     .then(post_response);
                 // after receiving request
                 // add future to Heap memory
                 Box::new(fut)
             }
             &Get => {
-                let path = req.path();
-                info!("{:}", path);
+                let path: &str = req.path();
+                let validator: Result<&str, &str> = validate_path(path);
 
-                let res = req
-                    .body()
-                    .concat2()
-                    .and_then(parse_form)
-                    .and_then(write_to_db) // TODO
-                    .then(post_response);
-                Box::new(res)
+                let response = match validator {
+                    Ok(ok_value) => {
+                        // valid path,
+                        // query db
+                        get_response(ok_value)
+                    }
+                    Err(err) => make_error_response(err, NotFound),
+                };
+
+                Box::new(response)
             }
 
-            _ => Box::new(futures::future::ok(Response::new().with_status(NotFound))),
+            err => Box::new(futures::future::ok(
+                Response::new()
+                    .with_status(NotFound)
+                    .with_body(format!("Error: {:}", err)),
+            )),
         }
     }
 }
