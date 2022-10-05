@@ -10,13 +10,10 @@ use hyper::{
 use serde_json::json;
 
 /// Send back response to user
-pub fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Error> {
+pub fn post_response(res: Result<String, Error>) -> FutureResult<Response, Error> {
     match res {
         Ok(success_result) => {
-            let payload: String = json!(
-                { "url": success_result.long_url }
-            )
-            .to_string();
+            let payload: String = json!({ "url": success_result }).to_string();
             let response: Response = Response::new()
                 .with_header(ContentLength(payload.len() as u64))
                 .with_header(ContentType::json())
@@ -44,4 +41,15 @@ pub fn post_response(res: Result<LongUrl, Error>) -> FutureResult<Response, Erro
             }
         }
     }
+}
+
+/// Sends GET response with short
+pub fn get_response(path: &str) -> FutureResult<Response, Error> {
+    let response: Response = Response::new()
+        // .with_header(ContentLength(payload.len() as u64))
+        // .with_header(ContentType::json())
+        .with_body(path.to_owned());
+    info!("Success Response sent: {:?}", response);
+
+    futures::future::ok(response) // sending response
 }
