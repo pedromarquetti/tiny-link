@@ -38,12 +38,15 @@ use hyper::{
 };
 use std::net::SocketAddr;
 
+use dotenvy::dotenv;
 use std::env;
 
 const DEFAULT_DATABASE_URL: &'static str = "postgresql://postgres@localhost:5432";
 
 fn connect_to_db() -> Option<PgConnection> {
+    dotenv().ok(); // checks for .env file
     let database_url = env::var("DATABASE_URL").unwrap_or(String::from(DEFAULT_DATABASE_URL));
+
     match PgConnection::establish(&database_url) {
         Ok(connection) => Some(connection),
         Err(error) => {
@@ -63,12 +66,13 @@ impl Service for Shortener {
     type Future = Box<dyn Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        let db_connection = match connect_to_db() {
+        let mut db_connection: PgConnection = match connect_to_db() {
             Some(connection) => connection,
             None => {
-                return Box::new(futures::future::ok(
-                    Response::new().with_status(InternalServerError),
-                ))
+                return Box::new(make_error_response(
+                    "DB Connection Error!",
+                    InternalServerError,
+                ));
             }
         };
         match req.method() {
@@ -77,7 +81,7 @@ impl Service for Shortener {
                     .body()
                     .concat2()
                     .and_then(parse_form) // checks if it's a valid form
-                    .and_then(move |long_url| write_to_db(long_url, &db_connection)) // TODO: will submit result to DB
+                    .and_then(move |long_url| write_to_db(long_url, &mut db_connection)) // TODO: will submit result to DB
                     .then(post_response);
                 // after receiving request
                 // add future to Heap memory
