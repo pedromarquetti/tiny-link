@@ -1,5 +1,4 @@
-use crate::schema::tiny_link::short_link;
-use crate::structs::{LongUrl, TinyLink};
+use crate::structs::{ShortUrl, TinyLink};
 
 use diesel::prelude::*;
 use diesel::{pg::PgConnection, result::Error as db_err};
@@ -13,16 +12,22 @@ pub fn write_to_db(
     db_connection: &mut PgConnection,
 ) -> FutureResult<String, Error> {
     // TODO:
-    // 1. try to save recvd_long_url + short version
-    // 2. return error if failed
-    // 3. return short url
+    // 1. Implement duplicate check
     use crate::schema::tiny_link;
+    use rand::{distributions::Alphanumeric, Rng};
+
+    let rand: String = rand::thread_rng() // generating random String to be used as short url
+        .sample_iter(&Alphanumeric)
+        .take(6)
+        .map(char::from)
+        .collect();
 
     let result: Result<String, db_err> = diesel::insert_into(tiny_link::table)
         // inserting TinyLink with long + short url
         .values(&TinyLink {
             long_link: recvd_long_url,
-            short_link: "teste".to_string(), // this has to be a short (6) random id
+            short_link: rand, // this has to be a short (6) random id
+                              // the server doesn't check for duplicates, yet
         })
         .returning(tiny_link::short_link) // returns short url to user
         .get_result(db_connection);
@@ -40,10 +45,18 @@ pub fn write_to_db(
     }
 }
 
-pub fn read_from_db(path: &str, db_connection: &PgConnection) -> Option<LongUrl> {
-    use crate::schema::tiny_link;
+pub fn read_from_db(path: ShortUrl, db_connection: &mut PgConnection) -> Option<TinyLink> {
+    use crate::schema::tiny_link::{long_link, short_link, table};
 
-    Some(LongUrl {
-        long_url: path.to_string(),
-    })
+    let query = table
+        .select(long_link)
+        .filter(short_link.eq(&path.short_url))
+        .first::<String>(db_connection);
+    match query {
+        Ok(success_res) => Some(TinyLink {
+            long_link: success_res,
+            short_link: path.short_url,
+        }),
+        Err(_) => None,
+    }
 }
