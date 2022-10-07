@@ -1,7 +1,4 @@
-use crate::{
-    error::make_error_response,
-    structs::{LongUrl, ShortUrl, TinyLink},
-};
+use crate::{error::make_error_response, structs::TinyLink};
 use futures::future::FutureResult;
 use hyper::{
     header::{ContentLength, ContentType},
