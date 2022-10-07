@@ -9,3 +9,5 @@ A simple server that recieves a long url as parameter and returns a tiny-url (th
 [Setting up Diesel - with .env](https://diesel.rs/guides/getting-started)
 
 [Basic `psql` setup on ubuntu](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
+
+[URL Parsing - implemented in `parser.rs`](https://www.secretfader.com/blog/2019/01/parsing-validating-assembling-urls-rust/)
