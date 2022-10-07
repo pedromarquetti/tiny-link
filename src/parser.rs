@@ -1,4 +1,4 @@
-use crate::structs::LongUrl;
+use crate::structs::ShortUrl;
 use futures::future::FutureResult;
 use hyper::{Chunk, Error};
 use std::collections::HashMap;
@@ -6,7 +6,7 @@ use std::io;
 use url::{form_urlencoded, ParseError, Url};
 
 /// Checks if received data matches `LongUrl` using a HashMap
-/// returns error if no "url" field is supplied
+/// returns error if no "url" field is supplied or if Url::parse fails
 pub fn parse_form(form_chunk: Chunk) -> FutureResult<String, Error> {
     let mut form: HashMap<String, String> = form_urlencoded::parse(form_chunk.as_ref())
         .into_owned()
@@ -36,14 +36,15 @@ pub fn parse_form(form_chunk: Chunk) -> FutureResult<String, Error> {
 }
 
 /// Checks if specified path matches requirements
-pub fn validate_path(mut path: String) -> Result<String, String> {
+pub fn validate_path(mut path: String) -> Result<ShortUrl, String> {
     if path.len() <= 1 {
         error!("Invalid Path!");
         Err("Invalid Path".to_string())
     } else {
-        info!("path info> {}", path.len());
         path.remove(0); // removing '/' from the recvd path
-
-        Ok(path.to_string())
+        Ok(ShortUrl {
+            // sending back valid path
+            short_url: path.to_string(),
+        })
     }
 }
