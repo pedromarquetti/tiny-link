@@ -1,6 +1,3 @@
-// https://www.goldsborough.me/rust/web/tutorial/2018/01/20/17-01-11-writing_a_microservice_in_rust/
-// https://www.secretfader.com/blog/2019/01/parsing-validating-assembling-urls-rust/
-
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
@@ -27,6 +24,7 @@ extern crate log;
 extern crate env_logger;
 extern crate serde_json;
 
+use db::read_from_db;
 use diesel::{pg::PgConnection, Connection};
 
 use futures::{future::Future, Stream};
@@ -37,6 +35,7 @@ use hyper::{
     StatusCode::{InternalServerError, NotFound},
 };
 use std::net::SocketAddr;
+use structs::ShortUrl;
 
 use dotenvy::dotenv;
 use std::env;
@@ -81,21 +80,22 @@ impl Service for Shortener {
                     .body()
                     .concat2()
                     .and_then(parse_form) // checks if it's a valid form
-                    .and_then(move |long_url| write_to_db(long_url, &mut db_connection)) // TODO: will submit result to DB
+                    .and_then(move |long_url| write_to_db(long_url, &mut db_connection))
                     .then(post_response);
                 // after receiving request
                 // add future to Heap memory
                 Box::new(fut)
             }
             &Get => {
-                let path: String = req.path().to_string();
-                let validator: Result<String, String> = validate_path(path);
+                let path: String = req.path().to_string(); // path with shortened url
+                let validator: Result<ShortUrl, String> = validate_path(path);
 
                 let response = match validator {
                     Ok(ok_value) => {
-                        // valid path,
+                        // valid short url,
                         // query db
-                        get_response(&ok_value)
+                        // get_response(&ok_value)
+                        get_response(read_from_db(ok_value, &mut db_connection))
                     }
                     Err(err) => make_error_response(&err, NotFound),
                 };
