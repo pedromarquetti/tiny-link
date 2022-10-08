@@ -116,7 +116,7 @@ fn main() {
     // 'RUST_LOG="info" cargo run' to log events
     env_logger::init();
     // address used by the server
-    let addr: SocketAddr = "127.0.0.1:8080".parse().unwrap();
+    let addr: SocketAddr = "0.0.0.0:8080".parse().unwrap();
     let server = Http::new()
         .bind(
             // bind &addr to server
