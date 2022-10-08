@@ -20,7 +20,7 @@ def send_get(path: str):
 
 def main():
     try:
-        print("sending get req")
+        print("sending post req")
         print(send_post("example.com").text)
         print("sending get req... ")
         print(send_get("teste").text)
