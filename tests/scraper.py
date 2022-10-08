@@ -20,10 +20,14 @@ def send_get(path: str):
 
 def main():
     try:
-        print("sending post req")
-        print(send_post("example.com").text)
+        post_long_url = send_post("example.com")
+        print(f"sending post req... response: {post_long_url.text}")
         print("sending get req... ")
-        print(send_get("teste").text)
+        get_short_url = send_get(post_long_url.json()["url"]).json()
+        print(f"""
+            long url: {get_short_url["long_link"]}
+            short link: {get_short_url["short_link"]}
+        """)
 
     except Exception as e:
         print(f"{e} occurred. Exiting")
