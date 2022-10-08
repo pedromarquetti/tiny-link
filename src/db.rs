@@ -57,6 +57,9 @@ pub fn read_from_db(path: ShortUrl, db_connection: &mut PgConnection) -> Option<
             long_link: success_res,
             short_link: path.short_url,
         }),
-        Err(_) => None,
+        Err(error) => {
+            error!("Query Error: {}", error);
+            None
+        }
     }
 }
