@@ -48,6 +48,6 @@ pub fn get_response(path: Option<TinyLink>) -> FutureResult<Response, Error> {
 
             futures::future::ok(response) // sending response
         }
-        None => make_error_response("Fail on get_response()", InternalServerError),
+        None => make_error_response("Specified path not found on DB!", InternalServerError),
     }
 }
