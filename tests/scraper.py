@@ -6,7 +6,7 @@ def send_post(url: str):
         "POST",
         r"http://localhost:8080",
         data={
-            "url": "http://ti.jolo"
+            "url": f"{url}"
         },
     )
 
@@ -20,7 +20,9 @@ def send_get(path: str):
 
 def main():
     try:
-        post_long_url = send_post("example.com")
+        post_long_url = send_post(
+            "http://e.xample"
+        )
         print(f"sending post req... response: {post_long_url.text}")
         print("sending get req... ")
         get_short_url = send_get(post_long_url.json()["url"]).json()
