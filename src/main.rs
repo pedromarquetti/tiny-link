@@ -99,14 +99,12 @@ impl Service for Shortener {
                     }
                     Err(err) => make_error_response(&err, NotFound),
                 };
-
                 Box::new(response)
             }
 
-            err => Box::new(futures::future::ok(
-                Response::new()
-                    .with_status(NotFound)
-                    .with_body(format!("Error: {:}", err)),
+            err => Box::new(make_error_response(
+                format!("{} is not a valid method!", err).as_str(),
+                NotFound,
             )),
         }
     }
