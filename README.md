@@ -2,6 +2,16 @@
 
 A simple server that recieves a long url as parameter and returns a tiny-url (that can be expanded)
 
+## Running the server locally
+
+### Docker
+
+There's a Docker-compose file that can be run with `docker-compose up`
+
+### Cargo
+
+You can also do `RUST_LOG="info" cargo run`
+
 ## Links I used to learn
 
 [Idea from here](https://www.goldsborough.me/rust/web/tutorial/2018/01/20/17-01-11-writing_a_microservice_in_rust/)
