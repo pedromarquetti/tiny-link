@@ -2,7 +2,7 @@
 
 A simple server that recieves a long url as parameter and returns a tiny-url (that can be expanded)
 
-> Note: this server is using an outdated version of hyper (0.11.27)
+> Note: this server is using an outdated version of [hyper](https://hyper.rs/) ([0.11.27](https://github.com/hyperium/hyper/tree/0.11.x))
 
 ## Running the server locally
 
