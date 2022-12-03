@@ -2,15 +2,12 @@ use crate::structs::{ShortUrl, TinyLink};
 
 use diesel::prelude::*;
 use diesel::{pg::PgConnection, result::Error as db_err};
-use futures::future::FutureResult;
-use hyper::Error;
-use std::io;
 
 /// writes received long URL to db, returns short Url that will be echoed to user
 pub fn write_to_db(
     recvd_long_url: String,
     db_connection: &mut PgConnection,
-) -> FutureResult<String, Error> {
+) -> Result<String, db_err> {
     // TODO:
     // 1. Implement duplicate check
     use crate::schema::tiny_link;
@@ -22,7 +19,7 @@ pub fn write_to_db(
         .map(char::from)
         .collect();
 
-    let result: Result<String, db_err> = diesel::insert_into(tiny_link::table)
+    return diesel::insert_into(tiny_link::table)
         // inserting TinyLink with long + short url
         .values(&TinyLink {
             long_link: recvd_long_url,
@@ -31,18 +28,26 @@ pub fn write_to_db(
         })
         .returning(tiny_link::short_link) // returns short url to user
         .get_result(db_connection);
-    match result {
-        Ok(shortened) => futures::future::ok(shortened), // all ok, sending back short url
 
-        Err(error) => {
-            // something happened, creating error
-            error!("Error writing to database: {}", error.to_string());
-            futures::future::err(hyper::Error::from(io::Error::new(
-                io::ErrorKind::Other,
-                format!("DB Error: {}", error),
-            )))
-        }
-    }
+    // let result: Result<String, db_err> = diesel::insert_into(tiny_link::table)
+    //     // inserting TinyLink with long + short url
+    //     .values(&TinyLink {
+    //         long_link: recvd_long_url,
+    //         short_link: rand, // this has to be a short (6) random id
+    //                           // the server doesn't check for duplicates, yet
+    //     })
+    //     .returning(tiny_link::short_link) // returns short url to user
+    //     .get_result(db_connection);
+
+    // match result {
+    //     Ok(shortened) => shortened, // all ok, sending back short url
+
+    //     Err(error) => {
+    //         // something happened, creating error
+    //         error!("Error writing to database: {}", error.to_string());
+    //         format!("DB Error: {}", error);
+    //     }
+    // };
 }
 
 pub fn read_from_db(path: ShortUrl, db_connection: &mut PgConnection) -> Option<TinyLink> {
