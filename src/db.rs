@@ -28,26 +28,6 @@ pub fn write_to_db(
         })
         .returning(tiny_link::short_link) // returns short url to user
         .get_result(db_connection);
-
-    // let result: Result<String, db_err> = diesel::insert_into(tiny_link::table)
-    //     // inserting TinyLink with long + short url
-    //     .values(&TinyLink {
-    //         long_link: recvd_long_url,
-    //         short_link: rand, // this has to be a short (6) random id
-    //                           // the server doesn't check for duplicates, yet
-    //     })
-    //     .returning(tiny_link::short_link) // returns short url to user
-    //     .get_result(db_connection);
-
-    // match result {
-    //     Ok(shortened) => shortened, // all ok, sending back short url
-
-    //     Err(error) => {
-    //         // something happened, creating error
-    //         error!("Error writing to database: {}", error.to_string());
-    //         format!("DB Error: {}", error);
-    //     }
-    // };
 }
 
 pub fn read_from_db(path: ShortUrl, db_connection: &mut PgConnection) -> Option<TinyLink> {
