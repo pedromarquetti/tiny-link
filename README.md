@@ -1,8 +1,8 @@
 # Welcome to my link shortener server written in Rust
 
-A simple server that recieves a long url as parameter and returns a tiny-url (that can be expanded)
+A simple server that recieves a long url as parameter and returns a tiny-url (that can be expanded).
 
-> Note: this server is using an outdated version of [hyper](https://hyper.rs/) ([0.11.27](https://github.com/hyperium/hyper/tree/0.11.x))
+Built originally with [hyper](https://hyper.rs/), now using [warp](https://github.com/seanmonstar/warp) to handle HTTP requests and [diesel](https://diesel.rs/) to interact with psql.
 
 ## Running the server locally
 
