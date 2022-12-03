@@ -94,13 +94,10 @@ async fn main() {
                         }
                     }
                 }
-                err => {
-                    error!("'{}' is not a method", err);
-                    make_error_response(
-                        format!("'{}' is not a method", err).as_str(),
-                        StatusCode::NOT_ACCEPTABLE,
-                    )
-                }
+                err => make_error_response(
+                    format!("'{}' is not a method", err).as_str(),
+                    StatusCode::NOT_ACCEPTABLE,
+                ),
             }
         });
 
