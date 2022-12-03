@@ -21,9 +21,10 @@ def send_get(path: str):
 def main():
     try:
         post_long_url = send_post(
-            "http://e.xample"
+            "http://example.com"
         )
-        print(f"sending post req... response: {post_long_url.text}")
+        print(
+            f"sending post req... response: {post_long_url.text} {post_long_url.status_code}")
         print("sending get req... ")
         get_short_url = send_get(post_long_url.json()["url"]).json()
         print(f"""
