@@ -3,10 +3,7 @@ use serde_json::{json, Value};
 use warp::reply::{Json, WithStatus};
 
 /// Returns error Response based on suplied parameters
-pub fn make_error_response(
-    error_message: &str,
-    status_code: StatusCode,
-) -> WithStatus<warp::reply::Json> {
+pub fn make_error_response(error_message: &str, status_code: StatusCode) -> WithStatus<Json> {
     let payload: Value = json!({ "error": error_message });
 
     error!("ERROR {:?}", payload);

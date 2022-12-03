@@ -1,5 +1,5 @@
 use crate::{error::make_error_response, structs::TinyLink};
-use hyper::{Error, StatusCode};
+use hyper::StatusCode;
 
 use diesel::result::Error as db_err;
 use serde_json::{json, Value};
@@ -8,7 +8,7 @@ use warp::reply::{Json, WithStatus};
 /// Send back Short URL to user
 ///
 /// If Url parse failed returns make_error_response()
-pub fn post_response(res: Result<String, db_err>) -> WithStatus<warp::reply::Json> {
+pub fn post_response(res: Result<String, db_err>) -> WithStatus<Json> {
     match res {
         Ok(success_result) => {
             let payload: Value = json!({ "url": success_result });
@@ -17,7 +17,6 @@ pub fn post_response(res: Result<String, db_err>) -> WithStatus<warp::reply::Jso
 
             // sending response
             warp::reply::with_status(warp::reply::json::<Value>(&payload), StatusCode::OK)
-            // warp::reply::json::<Value>(&payload)
         }
         Err(error) => {
             // failed writing to db
@@ -30,7 +29,7 @@ pub fn post_response(res: Result<String, db_err>) -> WithStatus<warp::reply::Jso
 }
 
 /// Sends GET response with Long URL
-pub fn get_response(path: Option<TinyLink>) -> WithStatus<warp::reply::Json> {
+pub fn get_response(path: Option<TinyLink>) -> WithStatus<Json> {
     match path {
         Some(path) => {
             let payload: Value = json!(

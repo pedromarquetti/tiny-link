@@ -1,6 +1,5 @@
 use crate::structs::ShortUrl;
-use futures::future::FutureResult;
-use hyper::{body::Bytes, Error};
+use hyper::body::Bytes;
 use std::collections::HashMap;
 use url::{form_urlencoded, ParseError, Url};
 
@@ -18,15 +17,11 @@ pub fn parse_form(form_chunk: &Bytes) -> Result<String, String> {
         match url {
             Ok(url) => {
                 info!("Parse Successful");
-                // futures::future::ok(url.to_string())
                 Ok(url.to_string())
             }
             Err(err) => {
+                // err while parsing form
                 info!("Parse Error>> {:}", err.to_string());
-                // futures::future::err(Error::from(io::Error::new(
-                //     io::ErrorKind::InvalidData,
-                //     format!("Could not parse URL, {}", err.to_string()),
-                // )))
                 Err(format!("error: {}", err))
             }
         }
@@ -38,7 +33,7 @@ pub fn validate_path(mut path: String) -> Result<ShortUrl, String> {
     path.remove(0); // removing '/' from the recvd path
     if path.len() <= 5 {
         error!("Invalid Path! {}({})", &path, &path.len());
-        Err("Invalid Path".to_string())
+        Err("Invalid Path, the provided path must be 6 characters long".to_string())
     } else {
         Ok(ShortUrl {
             // sending back valid path
