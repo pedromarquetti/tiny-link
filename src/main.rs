@@ -17,6 +17,7 @@ use crate::parser::{parse_form, validate_path};
 use crate::response::{get_response, post_response};
 
 use hyper::body::Bytes;
+use warp::cors::Builder;
 use warp::path::FullPath;
 
 #[macro_use]
@@ -59,6 +60,7 @@ async fn main() {
     // address used by the server
     let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
 
+    let cors: Builder = warp::cors().allow_any_origin();
     let method_mapper = warp::method()
         .and(warp::body::bytes())
         // https://stackoverflow.com/questions/73303927/how-to-get-path-from-url-in-warp
@@ -102,11 +104,12 @@ async fn main() {
                     error!("'{}' is not a method", err);
                     make_error_response(
                         format!("'{}' is not a method", err).as_str(),
-                        StatusCode::NOT_ACCEPTABLE,
+                        StatusCode::METHOD_NOT_ALLOWED,
                     )
                 }
             }
-        });
+        })
+        .with(cors);
 
     warp::serve(method_mapper).run(backend_addr).await;
 }
