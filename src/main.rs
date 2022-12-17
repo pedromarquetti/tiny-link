@@ -109,5 +109,4 @@ async fn main() {
         });
 
     warp::serve(method_mapper).run(backend_addr).await;
-    info!("running at {}", backend_addr);
 }
