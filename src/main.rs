@@ -53,7 +53,7 @@ async fn main() {
     env_logger::init();
 
     // address used by the server
-    let addr: SocketAddr = "0.0.0.0:8080".parse::<SocketAddr>().unwrap();
+    let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
 
     let method_mapper = warp::method()
         .and(warp::body::bytes())
@@ -104,6 +104,6 @@ async fn main() {
             }
         });
 
-    warp::serve(method_mapper).run(addr).await;
-    info!("running at {}", addr);
+    warp::serve(method_mapper).run(backend_addr).await;
+    info!("running at {}", backend_addr);
 }
