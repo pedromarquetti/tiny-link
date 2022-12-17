@@ -50,6 +50,10 @@ fn connect_to_db() -> Option<PgConnection> {
 async fn main() {
     // using
     // 'RUST_LOG="info" cargo run' to log events
+    // or
+    // RUST_LOG="info" systemfd --no-pid -s http::3030 -- cargo watch -x 'run'
+    // for autoreload
+
     env_logger::init();
 
     // address used by the server
