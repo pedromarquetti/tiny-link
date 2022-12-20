@@ -60,7 +60,8 @@ async fn main() {
     // address used by the server
     let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
 
-    let cors: Builder = warp::cors().allow_any_origin();
+    let cors: Builder = warp::cors().allow_methods(&[Method::GET, Method::POST]);
+
     let method_mapper = warp::method()
         .and(warp::body::bytes())
         // https://stackoverflow.com/questions/73303927/how-to-get-path-from-url-in-warp
