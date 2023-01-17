@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 env_logger = "0.5.3"
-futures = "0.1.17"
+futures = "0.3.25"
 warp = "0.3.3"
 tokio = { version = "1", features = ["full"] }
 hyper = "^0.14"

@@ -27,6 +27,7 @@ extern crate serde_json;
 
 use diesel::{pg::PgConnection, Connection};
 use dotenvy::dotenv;
+use futures::future;
 use hyper::StatusCode;
 use std::env;
 use std::net::SocketAddr;
@@ -57,12 +58,11 @@ async fn main() {
 
     env_logger::init();
 
-    // address used by the server
-    let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
-
     let cors: Builder = warp::cors().allow_methods(&[Method::GET, Method::POST]);
 
-    let method_mapper = warp::method()
+    // let get_req_filter = warp::path::full().map(async |path: FullPath| {});
+
+    let backend_filter = warp::method()
         .and(warp::body::bytes())
         // https://stackoverflow.com/questions/73303927/how-to-get-path-from-url-in-warp
         .and(warp::path::full())
@@ -112,5 +112,16 @@ async fn main() {
         })
         .with(cors);
 
-    warp::serve(method_mapper).run(backend_addr).await;
+    // address used by the server
+    let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
+    let backend_server = warp::serve(backend_filter).bind(backend_addr);
+
+    let frontend_addr: SocketAddr = "0.0.0.0:3032".parse::<SocketAddr>().unwrap();
+    let front_end_filters = warp::any().map(|| {
+        info!("port 80 server");
+        "oi"
+    });
+    let frontend_server = warp::serve(front_end_filters).bind(frontend_addr);
+
+    future::join(backend_server, frontend_server).await;
 }
