@@ -23,3 +23,9 @@ You can also do `RUST_LOG="info" cargo run`
 [Basic `psql` setup on ubuntu](https://www.cherryservers.com/blog/how-to-install-and-setup-postgresql-server-on-ubuntu-20-04)
 
 [URL Parsing - implemented in `parser.rs`](https://www.secretfader.com/blog/2019/01/parsing-validating-assembling-urls-rust/)
+
+
+# TODOS
+
+1. Implement a function that checks for duplicated short URLs
+1. Create separate function for [the random key generator](https://github.com/pedromarquetti/tiny-link/blob/207c3ec50c536227c535760ba09a8c3f4c620c34/src/db.rs#L16)
