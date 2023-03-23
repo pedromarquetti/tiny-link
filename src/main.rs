@@ -27,7 +27,7 @@ extern crate serde_json;
 
 use diesel::{pg::PgConnection, Connection};
 use dotenvy::dotenv;
-use futures::future;
+
 use hyper::StatusCode;
 use std::env;
 use std::net::SocketAddr;
@@ -113,5 +113,8 @@ async fn main() {
 
     // address used by the server
     let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
+
+    info!("running server at {} ", backend_addr);
+
     warp::serve(backend_filter).bind(backend_addr).await;
 }
