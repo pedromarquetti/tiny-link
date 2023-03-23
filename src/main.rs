@@ -71,7 +71,6 @@ async fn main() {
                 Some(connection) => Ok(connection),
                 None => Err("unable to connect to db".to_string()),
             };
-
             match method {
                 Method::POST => {
                     match parse_form(&body) {
@@ -114,14 +113,5 @@ async fn main() {
 
     // address used by the server
     let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
-    let backend_server = warp::serve(backend_filter).bind(backend_addr);
-
-    let frontend_addr: SocketAddr = "0.0.0.0:3032".parse::<SocketAddr>().unwrap();
-    let front_end_filters = warp::any().map(|| {
-        info!("port 80 server");
-        "oi"
-    });
-    let frontend_server = warp::serve(front_end_filters).bind(frontend_addr);
-
-    future::join(backend_server, frontend_server).await;
+    warp::serve(backend_filter).bind(backend_addr).await;
 }
