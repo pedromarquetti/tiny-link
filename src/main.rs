@@ -51,10 +51,13 @@ fn connect_to_db() -> Option<PgConnection> {
 #[tokio::main]
 async fn main() {
     // using
-    // 'RUST_LOG="info" cargo run' to log events
+    // cargo run' to log events
     // or
-    // RUST_LOG="info" systemfd --no-pid -s http::3030 -- cargo watch -x 'run'
+    // systemfd --no-pid -s http::3030 -- cargo watch -x 'run'
     // for autoreload
+    if env::var_os("RUST_LOG").is_none() {
+        env::set_var("RUST_LOG", "tiny_link")
+    }
 
     env_logger::init();
 
