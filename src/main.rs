@@ -6,26 +6,27 @@ extern crate diesel;
 mod models;
 mod schema;
 
+use crate::error::handle_rejection;
 mod db;
 mod error;
 mod parser;
-mod response;
-mod structs;
-use crate::db::{read_from_db, write_to_db};
-use crate::error::make_error_response;
-use crate::parser::{parse_form, validate_path};
-use crate::response::{get_response, post_response};
+mod routes;
 
-use hyper::body::Bytes;
-use warp::cors::Builder;
-use warp::path::FullPath;
+// use crate::parser::{parse_form, validate_path};
+use crate::db::connect_to_db;
+// use crate::response::{get_response, post_response};
+use crate::routes::api::read_from_db;
 
 #[macro_use]
 extern crate log;
 extern crate env_logger;
 extern crate serde_json;
 
-use diesel::{pg::PgConnection, Connection};
+use diesel::{
+    pg::PgConnection,
+    prelude::*,
+    r2d2::{ConnectionManager, Pool},
+};
 use dotenvy::dotenv;
 
 use hyper::StatusCode;
@@ -35,17 +36,8 @@ use warp::{http::Method, Filter};
 
 const DEFAULT_DATABASE_URL: &'static str = "postgresql://postgres@localhost:5432";
 
-fn connect_to_db() -> Option<PgConnection> {
-    dotenv().ok(); // checks for .env file
-    let database_url = env::var("DATABASE_URL").unwrap_or(String::from(DEFAULT_DATABASE_URL));
-
-    match PgConnection::establish(&database_url) {
-        Ok(connection) => Some(connection),
-        Err(error) => {
-            error!("Error connecting to database: {}", error);
-            None
-        }
-    }
+pub fn db_url() -> String {
+    env::var("DATABASE_URL").unwrap_or(String::from(DEFAULT_DATABASE_URL))
 }
 
 #[tokio::main]
@@ -59,65 +51,20 @@ async fn main() {
         env::set_var("RUST_LOG", "tiny_link")
     }
 
-    env_logger::init();
+    env_logger::init(); // initializes pretty logger
 
-    let cors: Builder = warp::cors().allow_methods(&[Method::GET, Method::POST]);
+    dotenv().ok(); // checks for .env file
 
-    // let get_req_filter = warp::path::full().map(async |path: FullPath| {});
+    let pool: Pool<ConnectionManager<PgConnection>> = connect_to_db(db_url());
 
-    let backend_filter = warp::method()
-        .and(warp::body::bytes())
-        // https://stackoverflow.com/questions/73303927/how-to-get-path-from-url-in-warp
-        .and(warp::path::full())
-        .map(move |method: Method, body: Bytes, path: FullPath| {
-            let db_connection: Result<PgConnection, String> = match connect_to_db() {
-                Some(connection) => Ok(connection),
-                None => Err("unable to connect to db".to_string()),
-            };
-            match method {
-                Method::POST => {
-                    match parse_form(&body) {
-                        Ok(parsed) => {
-                            // recieved post form ok
-                            post_response(write_to_db(parsed, &mut db_connection.unwrap()))
-                        }
-                        Err(err) => {
-                            make_error_response(err.as_str(), StatusCode::INTERNAL_SERVER_ERROR)
-                        }
-                    }
-                }
-                Method::GET => {
-                    match validate_path(path.as_str().to_string()) {
-                        Ok(path) => {
-                            // path is valid...
-                            match db_connection {
-                                Ok(mut conn) => get_response(read_from_db(path, &mut conn)),
-                                Err(error) => make_error_response(
-                                    error.as_str(),
-                                    StatusCode::INTERNAL_SERVER_ERROR,
-                                ),
-                            }
-                        }
-                        Err(invalid_path) => {
-                            make_error_response(invalid_path.as_str(), StatusCode::NOT_ACCEPTABLE)
-                        }
-                    }
-                }
-                err => {
-                    error!("'{}' is not a method", err);
-                    make_error_response(
-                        format!("'{}' is not a method", err).as_str(),
-                        StatusCode::METHOD_NOT_ALLOWED,
-                    )
-                }
-            }
-        })
-        .with(cors);
+    let routes = routes::builder(pool).recover(handle_rejection).boxed();
+
+    // let cors: Builder = warp::cors().allow_methods(&[Method::GET, Method::POST]);
 
     // address used by the server
     let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
 
     info!("running server at {} ", backend_addr);
 
-    warp::serve(backend_filter).bind(backend_addr).await;
+    warp::serve(routes).bind(backend_addr).await;
 }

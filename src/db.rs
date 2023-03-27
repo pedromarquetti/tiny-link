@@ -1,50 +1,37 @@
-use crate::structs::{ShortUrl, TinyLink};
-
 use diesel::prelude::*;
-use diesel::{pg::PgConnection, result::Error as db_err};
+use diesel::r2d2::PooledConnection;
+use diesel::{
+    pg::PgConnection,
+    prelude::*,
+    r2d2::{ConnectionManager, Error as R2D2Err, Pool as R2D2Pool},
+    result::Error as DBError,
+};
 
-/// writes received long URL to db, returns short Url that will be echoed to user
-pub fn write_to_db(
-    recvd_long_url: String,
-    db_connection: &mut PgConnection,
-) -> Result<String, db_err> {
-    // TODO:
-    // 1. Implement duplicate check
-    use crate::schema::tiny_link;
-    use rand::{distributions::Alphanumeric, Rng};
+pub type Pool = R2D2Pool<ConnectionManager<PgConnection>>;
+pub type DbConnection = PooledConnection<ConnectionManager<PgConnection>>;
+// pub type DbConnection = Result<PooledConnection<ConnectionManager<PgConnection>>, R2D2Err>;
 
-    let rand: String = rand::thread_rng() // generating random String to be used as short url
-        .sample_iter(&Alphanumeric)
-        .take(6)
-        .map(char::from)
-        .collect();
+use crate::schema::tiny_link;
 
-    return diesel::insert_into(tiny_link::table)
-        // inserting TinyLink with long + short url
-        .values(&TinyLink {
-            long_link: recvd_long_url,
-            short_link: rand, // this has to be a short (6) random id
-                              // the server doesn't check for duplicates, yet
-        })
-        .returning(tiny_link::short_link) // returns short url to user
-        .get_result(db_connection);
+#[derive(Queryable, Serialize, Debug)]
+/// This struct represents the long url the user wants to shorten
+pub struct Link {
+    pub long_url: String,
+}
+#[derive(Queryable, Insertable, Debug, Serialize)]
+#[diesel(table_name = tiny_link)]
+/// This struct represents the shortened link
+pub struct TinyLink {
+    pub long_link: String,
+    pub short_link: String,
 }
 
-pub fn read_from_db(path: ShortUrl, db_connection: &mut PgConnection) -> Option<TinyLink> {
-    use crate::schema::tiny_link::{long_link, short_link, table};
+/// Generates new connection pool to db
+pub fn connect_to_db(url: String) -> Pool {
+    let manager = ConnectionManager::<PgConnection>::new(url);
 
-    let query = table
-        .select(long_link)
-        .filter(short_link.eq(&path.short_url))
-        .first::<String>(db_connection);
-    match query {
-        Ok(success_res) => Some(TinyLink {
-            long_link: success_res,
-            short_link: path.short_url,
-        }),
-        Err(error) => {
-            error!("Query Error: {}", error);
-            None
-        }
-    }
+    Pool::builder()
+        .build(manager)
+        .expect("Error building connection pool")
+    // Pool::new(manager).expect("Error building pool")
 }
