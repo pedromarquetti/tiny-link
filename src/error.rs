@@ -37,7 +37,7 @@ pub async fn handle_rejection(err: Rejection) -> Result<WithStatus<Box<dyn Reply
 /// Types of error that can occur
 enum ErrorKind {
     Database,
-    InvalidLink,
+    InvalidForm,
     InvalidPath,
     Custom(String),
     UniqueViolation,
@@ -55,7 +55,7 @@ impl Error {
     /// Invalid received POST request forms!
     pub fn invalid_forms() -> Self {
         Self {
-            kind: ErrorKind::InvalidLink,
+            kind: ErrorKind::InvalidForm,
             status_code: StatusCode::BAD_REQUEST,
             log_message: None,
         }
@@ -114,7 +114,7 @@ impl Error {
 
         // response body
         let body: Box<dyn Reply> = match &self.kind {
-            ErrorKind::InvalidLink => Box::new(reply::json(
+            ErrorKind::InvalidForm => Box::new(reply::json(
                 &json!({"error":"invalid path! path must be 6 characters long"}),
             )),
             ErrorKind::UniqueViolation => {
