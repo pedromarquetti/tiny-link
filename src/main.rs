@@ -10,7 +10,6 @@ use crate::db::connect_to_db;
 use crate::error::handle_rejection;
 mod db;
 mod error;
-mod parser;
 mod routes;
 
 #[macro_use]
