@@ -13,7 +13,7 @@ pub type DbConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
 use crate::schema::tiny_link;
 
-#[derive(Queryable, Serialize, Debug)]
+#[derive(Queryable, Serialize, Debug, Deserialize)]
 /// This struct represents the long url the user wants to shorten
 pub struct Link {
     pub long_url: String,
