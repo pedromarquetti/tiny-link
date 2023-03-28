@@ -63,7 +63,7 @@ impl Error {
     /// Invalid Path for get requests
     pub fn invalid_path() -> Self {
         Self {
-            kind: ErrorKind::InvalidLink,
+            kind: ErrorKind::InvalidPath,
             status_code: StatusCode::BAD_REQUEST,
             log_message: None,
         }
