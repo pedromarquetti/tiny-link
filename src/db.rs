@@ -2,9 +2,7 @@ use diesel::prelude::*;
 use diesel::r2d2::PooledConnection;
 use diesel::{
     pg::PgConnection,
-    prelude::*,
-    r2d2::{ConnectionManager, Error as R2D2Err, Pool as R2D2Pool},
-    result::Error as DBError,
+    r2d2::{ConnectionManager, Pool as R2D2Pool},
 };
 
 pub type Pool = R2D2Pool<ConnectionManager<PgConnection>>;
