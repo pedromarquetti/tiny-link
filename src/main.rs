@@ -53,9 +53,9 @@ async fn main() {
     let routes = routes::builder(pool).recover(handle_rejection).boxed();
 
     // address used by the server
-    let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
+    let address: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
 
-    info!("running server at {} ", backend_addr);
+    info!("running server at {} ", address);
 
-    warp::serve(routes).bind(backend_addr).await;
+    warp::serve(routes).bind(address).await;
 }
