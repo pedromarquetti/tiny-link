@@ -6,16 +6,12 @@ extern crate diesel;
 mod models;
 mod schema;
 
+use crate::db::connect_to_db;
 use crate::error::handle_rejection;
 mod db;
 mod error;
 mod parser;
 mod routes;
-
-// use crate::parser::{parse_form, validate_path};
-use crate::db::connect_to_db;
-// use crate::response::{get_response, post_response};
-use crate::routes::api::read_from_db;
 
 #[macro_use]
 extern crate log;
@@ -24,15 +20,13 @@ extern crate serde_json;
 
 use diesel::{
     pg::PgConnection,
-    prelude::*,
     r2d2::{ConnectionManager, Pool},
 };
 use dotenvy::dotenv;
 
-use hyper::StatusCode;
 use std::env;
 use std::net::SocketAddr;
-use warp::{http::Method, Filter};
+use warp::Filter;
 
 const DEFAULT_DATABASE_URL: &'static str = "postgresql://postgres@localhost:5432";
 

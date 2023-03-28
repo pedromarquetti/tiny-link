@@ -5,7 +5,6 @@ use diesel::{
 
 use serde_json::json;
 use std::convert::Infallible;
-use url::ParseError;
 use warp::{
     http::StatusCode,
     reject::{self, Rejection},
