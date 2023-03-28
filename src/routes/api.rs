@@ -10,8 +10,9 @@ use crate::{
 use diesel::prelude::*;
 
 /// writes received long URL to db, returns short Url that will be echoed to user
-pub async fn create_link(new_link: Link, conn: &mut DbConnection) -> Result<impl Reply, Rejection> {
+pub async fn create_link(new_link: Link, conn: DbConnection) -> Result<impl Reply, Rejection> {
     use crate::schema::tiny_link;
+    let mut db_conn = conn;
 
     if let Err(e) = parse_form(&new_link.long_url) {
         return Err(convert_to_rejection(e));
@@ -27,12 +28,12 @@ pub async fn create_link(new_link: Link, conn: &mut DbConnection) -> Result<impl
         long_link: new_link.long_url,
         short_link: rand,
     };
-    let query = diesel::insert_into(tiny_link::table)
+    diesel::insert_into(tiny_link::table)
         // inserting TinyLink with long + short url
         .values::<&TinyLink>(&payload)
         .returning(tiny_link::short_link)
         // .get_result(&mut connection)
-        .execute(conn)
+        .execute(&mut db_conn)
         .map_err(convert_to_rejection)?;
     Ok(warp::reply::with_status(
         warp::reply::json(&json!({ "data": payload })),
@@ -43,26 +44,29 @@ pub async fn create_link(new_link: Link, conn: &mut DbConnection) -> Result<impl
 /// Queries db on GET request with 6-character id to find related long link
 ///
 /// Tries t
-pub async fn read_from_db(path: FullPath, conn: DbConnection) -> Result<impl Reply, Rejection> {
+pub async fn read_from_db(
+    full_path: FullPath,
+    conn: DbConnection,
+) -> Result<impl Reply, Rejection> {
     use crate::schema::tiny_link::{long_link, short_link, table};
 
     let mut db_conn = conn;
 
-    let path = path.as_str().to_string();
-    if !valid_recvd_path(&path) {
-        return Err(convert_to_rejection(Error::invalid_path()));
-    }
+    let full_path = match valid_recvd_path(full_path.as_str().to_string()) {
+        Err(_) => return Err(convert_to_rejection(Error::invalid_path())),
+        Ok(full_path) => full_path,
+    };
 
     let query = table
         .select(long_link) // get long link
-        .filter(short_link.eq(path.as_str())) // where short_link == path
+        .filter(short_link.eq(full_path.as_str())) // where short_link == path
         // .first::<String>(conn)
         .first::<String>(&mut db_conn)
         .map_err(convert_to_rejection)?;
 
     let payload: TinyLink = TinyLink {
         long_link: query,
-        short_link: String::from(path.as_str()),
+        short_link: full_path,
     };
     Ok(warp::reply::json(&json!({ "data": payload })))
 }
@@ -70,13 +74,14 @@ pub async fn read_from_db(path: FullPath, conn: DbConnection) -> Result<impl Rep
 /// Used for GET Requests
 ///
 /// Checks if specified path matches requirements
-pub fn valid_recvd_path(mut path: &str) -> bool {
-    path.to_string().remove(0); // removing '/' from the recvd path
+pub fn valid_recvd_path(mut path: String) -> Result<String, ()> {
+    // removing '/' from the recvd path
+    path.remove(0);
     if path.len() <= 5 {
         error!("Invalid Path! {}({})", &path, &path.len());
-        return false;
+        return Err(());
     }
-    true
+    Ok(path)
 }
 
 /// Checks if received data has valid
