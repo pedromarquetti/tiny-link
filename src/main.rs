@@ -52,8 +52,6 @@ async fn main() {
 
     let routes = routes::builder(pool).recover(handle_rejection).boxed();
 
-    // let cors: Builder = warp::cors().allow_methods(&[Method::GET, Method::POST]);
-
     // address used by the server
     let backend_addr: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
 
