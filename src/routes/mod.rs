@@ -26,12 +26,12 @@ pub fn builder(
         .and(pool_filter.clone())
         .and_then(api::read_from_db);
 
-    let api_post_long_link = warp::post()
-        .and(warp::path::full())
+    let api_post_new_short_link = warp::post()
+        .and(warp::body::json())
         .and(pool_filter.clone())
-        .and_then(api::read_from_db);
+        .and_then(api::create_link);
 
-    let api_endpoints = api_get_long_link.or(api_post_long_link);
+    let api_endpoints = api_get_long_link.or(api_post_new_short_link);
 
     api_endpoints
 }
