@@ -114,14 +114,14 @@ impl Error {
 
         // response body
         let body: Box<dyn Reply> = match &self.kind {
-            ErrorKind::InvalidForm => Box::new(reply::json(
+            ErrorKind::InvalidPath => Box::new(reply::json(
                 &json!({"error":"invalid path! path must be 6 characters long"}),
             )),
             ErrorKind::UniqueViolation => {
                 Box::new(reply::json(&json!({"error":"field not unique!"})))
             }
             ErrorKind::Database => Box::new(reply::json(&json!({"error":self.log_message}))),
-            ErrorKind::InvalidPath => {
+            ErrorKind::InvalidForm => {
                 Box::new(reply::json(&json!({ "error": "Invalid received forms" })))
             }
             ErrorKind::Custom(msg) => Box::new(reply::json(&json!({ "error": msg }))),
