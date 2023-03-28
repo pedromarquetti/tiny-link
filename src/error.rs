@@ -6,8 +6,9 @@ use diesel::{
 use serde_json::json;
 use std::convert::Infallible;
 use warp::{
+    body::BodyDeserializeError,
     http::StatusCode,
-    reject::{self, Rejection},
+    reject::{self, MethodNotAllowed, Rejection},
     reply::{self, Reply, WithStatus},
 };
 
@@ -22,10 +23,16 @@ pub async fn handle_rejection(err: Rejection) -> Result<WithStatus<Box<dyn Reply
     if let Some(e) = err.find::<Error>() {
         // creates json reply
         Ok(e.to_json_reply())
+    } else if let Some(err) = err.find::<BodyDeserializeError>() {
+        error!("{}", err);
+        Ok(Error::custom(err.to_string(), StatusCode::BAD_REQUEST).to_json_reply())
+    } else if let Some(err) = err.find::<MethodNotAllowed>() {
+        error!("{}", err);
+        Ok(Error::custom(err.to_string(), StatusCode::BAD_REQUEST).to_json_reply())
     } else {
         // something else happened
         Ok(Error::custom_with_log(
-            "internal server error",
+            format!("{:#?}", err),
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("{:?}", err),
         )
@@ -44,7 +51,13 @@ enum ErrorKind {
 }
 
 #[derive(Debug)]
-/// Struct that represents possible errors
+/// Struct that represents possible Errors
+///
+/// to_json_reply() creates JSON responses to reply to the server
+///
+/// # Usage
+///
+/// 1.Error::(insert function here).to_json_reply()
 pub struct Error {
     kind: ErrorKind,
     status_code: StatusCode,
@@ -121,9 +134,10 @@ impl Error {
                 Box::new(reply::json(&json!({"error":"field not unique!"})))
             }
             ErrorKind::Database => Box::new(reply::json(&json!({"error":self.log_message}))),
-            ErrorKind::InvalidForm => {
-                Box::new(reply::json(&json!({ "error": "Invalid received forms" })))
-            }
+            ErrorKind::InvalidForm => Box::new(reply::json(
+                &json!({ "error": "Invalid received forms, expected JSON with \"long_url\" " }),
+            )),
+
             ErrorKind::Custom(msg) => Box::new(reply::json(&json!({ "error": msg }))),
         };
 
