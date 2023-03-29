@@ -60,7 +60,6 @@ pub async fn read_from_db(
     let query = table
         .select(long_link) // get long link
         .filter(short_link.eq(full_path.as_str())) // where short_link == path
-        // .first::<String>(conn)
         .first::<String>(&mut db_conn)
         .map_err(convert_to_rejection)?;
 
@@ -68,7 +67,8 @@ pub async fn read_from_db(
         long_link: query,
         short_link: full_path,
     };
-    Ok(warp::reply::json(&json!({ "data": payload })))
+    let uri = payload.long_link.parse::<Uri>().unwrap();
+    Ok(Box::new(warp::redirect::temporary(uri)))
 }
 
 /// Used for GET Requests
