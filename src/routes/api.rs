@@ -1,6 +1,7 @@
 use hyper::{StatusCode, Uri};
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::json;
+use url::{ParseError, Url};
 use warp::{path::FullPath, Rejection, Reply};
 
 use crate::{
@@ -15,7 +16,7 @@ pub async fn create_link(new_link: Link, conn: DbConnection) -> Result<impl Repl
     let mut db_conn = conn;
 
     if let Err(e) = parse_form(&new_link.long_url) {
-        return Err(convert_to_rejection(e));
+        return Err(e);
     }
 
     // generating random String to be used as short url
@@ -87,12 +88,9 @@ pub fn valid_recvd_path(mut path: String) -> Result<String, ()> {
 /// Checks if received data has valid
 ///
 /// returns error if no "url" field is supplied or if Url::parse fails
-pub fn parse_form(long_url: &str) -> Result<(), Error> {
-    let parsed = long_url
-        .parse::<Uri>()
-        .map_err(|_| Error::invalid_forms())?;
-    parsed
-        .scheme()
-        .map(|_| ())
-        .ok_or_else(|| Error::invalid_forms())
+pub fn parse_form(long_url: &str) -> Result<Url, Rejection> {
+    match Url::parse(long_url) {
+        Ok(url) => Ok(url),
+        Err(err) => Err(convert_to_rejection(err)),
+    }
 }
