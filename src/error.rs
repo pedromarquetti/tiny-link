@@ -5,6 +5,7 @@ use diesel::{
 
 use serde_json::json;
 use std::convert::Infallible;
+use url::ParseError;
 use warp::{
     body::BodyDeserializeError,
     http::StatusCode,
@@ -21,6 +22,7 @@ pub fn convert_to_rejection<T: Into<Error>>(error: T) -> Rejection {
 pub async fn handle_rejection(err: Rejection) -> Result<WithStatus<Box<dyn Reply>>, Infallible> {
     // if err.find has 'e' as Err
     if let Some(e) = err.find::<Error>() {
+        error!("{:?}", e);
         // creates json reply
         Ok(e.to_json_reply())
     } else if let Some(err) = err.find::<BodyDeserializeError>() {
@@ -61,7 +63,7 @@ enum ErrorKind {
 pub struct Error {
     kind: ErrorKind,
     status_code: StatusCode,
-    log_message: Option<String>,
+    msg: Option<String>,
 }
 
 impl Error {
@@ -70,7 +72,7 @@ impl Error {
         Self {
             kind: ErrorKind::InvalidForm,
             status_code: StatusCode::BAD_REQUEST,
-            log_message: None,
+            msg: None,
         }
     }
     /// Invalid Path for get requests
@@ -78,7 +80,7 @@ impl Error {
         Self {
             kind: ErrorKind::InvalidPath,
             status_code: StatusCode::BAD_REQUEST,
-            log_message: None,
+            msg: None,
         }
     }
     /// Database Error
@@ -86,7 +88,7 @@ impl Error {
         Self {
             kind: ErrorKind::Database,
             status_code: StatusCode::INTERNAL_SERVER_ERROR,
-            log_message: Some(message.into()),
+            msg: Some(message.into()),
         }
     }
 
@@ -94,7 +96,7 @@ impl Error {
         Self {
             kind: ErrorKind::UniqueViolation,
             status_code: StatusCode::CONFLICT,
-            log_message: None,
+            msg: None,
         }
     }
 
@@ -102,7 +104,7 @@ impl Error {
         Self {
             kind: ErrorKind::Custom(msg.into()),
             status_code,
-            log_message: None,
+            msg: None,
         }
     }
 
@@ -114,13 +116,13 @@ impl Error {
         Self {
             kind: ErrorKind::Custom(msg.into()),
             status_code,
-            log_message: Some(log_msg),
+            msg: Some(log_msg),
         }
     }
 
     /// Converts Error to json
     fn to_json_reply(&self) -> WithStatus<Box<dyn Reply>> {
-        if let Some(log) = &self.log_message {
+        if let Some(log) = &self.msg {
             // log error to console
             error!("{}", log);
         }
@@ -133,7 +135,8 @@ impl Error {
             ErrorKind::UniqueViolation => {
                 Box::new(reply::json(&json!({"error":"field not unique!"})))
             }
-            ErrorKind::Database => Box::new(reply::json(&json!({"error":self.log_message}))),
+            ErrorKind::Database => Box::new(reply::json(&json!({"error":self.msg}
+            ))),
             ErrorKind::InvalidForm => Box::new(reply::json(
                 &json!({ "error": "Invalid received forms, expected JSON with \"long_url\" " }),
             )),
@@ -167,5 +170,10 @@ impl From<R2D2Error> for Error {
 impl From<r2d2::Error> for Error {
     fn from(value: r2d2::Error) -> Self {
         Error::database(value.to_string())
+    }
+}
+impl From<ParseError> for Error {
+    fn from(msg: ParseError) -> Self {
+        Error::custom(msg.to_string(), StatusCode::BAD_REQUEST)
     }
 }
