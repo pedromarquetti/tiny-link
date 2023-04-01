@@ -6,7 +6,7 @@ extern crate diesel;
 mod models;
 mod schema;
 
-use crate::db::connect_to_db;
+use crate::db::{connect_to_db, Pool};
 use crate::error::handle_rejection;
 mod db;
 mod error;
@@ -17,10 +17,6 @@ extern crate log;
 extern crate env_logger;
 extern crate serde_json;
 
-use diesel::{
-    pg::PgConnection,
-    r2d2::{ConnectionManager, Pool},
-};
 use dotenvy::dotenv;
 
 use std::env;
@@ -48,9 +44,7 @@ async fn main() {
 
     dotenv().ok(); // checks for .env file
 
-    let pool: Pool<ConnectionManager<PgConnection>> = connect_to_db(db_url());
-
-    let routes = routes::builder(pool).recover(handle_rejection).boxed();
+    let routes = routes::builder().recover(handle_rejection).boxed();
 
     // address used by the server
     let address: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();

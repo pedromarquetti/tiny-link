@@ -5,15 +5,25 @@ use url::{ParseError, Url};
 use warp::{path::FullPath, Rejection, Reply};
 
 use crate::{
-    db::{DbConnection, Link, TinyLink},
+    db::{connect_to_db, DbConnection, Link, Pool, R2D2Err, TinyLink},
+    db_url,
     error::{convert_to_rejection, Error},
 };
 use diesel::prelude::*;
 
 /// writes received long URL to db, returns short Url that will be echoed to user
-pub async fn create_link(new_link: Link, conn: DbConnection) -> Result<impl Reply, Rejection> {
+pub async fn create_link(new_link: Link) -> Result<impl Reply, Rejection> {
     use crate::schema::tiny_link;
-    let mut db_conn = conn;
+
+    // getting pool from connect_to_db
+    let pool: Result<Pool, R2D2Err> = connect_to_db(db_url());
+
+    // reject error if connect_to_db is R2D2Err
+    if let Err(e) = pool {
+        return Err(convert_to_rejection(e));
+    }
+    let pool = pool.unwrap();
+    let mut conn = pool.get().unwrap();
 
     if let Err(e) = parse_form(&new_link.long_url) {
         return Err(e);
@@ -34,7 +44,7 @@ pub async fn create_link(new_link: Link, conn: DbConnection) -> Result<impl Repl
         .values::<&TinyLink>(&payload)
         .returning(tiny_link::short_link)
         // .get_result(&mut connection)
-        .execute(&mut db_conn)
+        .execute(&mut conn)
         .map_err(convert_to_rejection)?;
     Ok(warp::reply::with_status(
         warp::reply::json(&json!({ "data": payload })),
@@ -45,13 +55,18 @@ pub async fn create_link(new_link: Link, conn: DbConnection) -> Result<impl Repl
 /// Queries db on GET request with 6-character id to find related long link
 ///
 /// Tries t
-pub async fn read_from_db(
-    full_path: FullPath,
-    conn: DbConnection,
-) -> Result<impl Reply, Rejection> {
+pub async fn read_from_db(full_path: FullPath) -> Result<impl Reply, Rejection> {
     use crate::schema::tiny_link::{long_link, short_link, table};
 
-    let mut db_conn = conn;
+    // getting pool from connect_to_db
+    let pool: Result<Pool, R2D2Err> = connect_to_db(db_url());
+
+    // reject error if connect_to_db is R2D2Err
+    if let Err(e) = pool {
+        return Err(convert_to_rejection(e));
+    }
+    let pool = pool.unwrap();
+    let mut conn = pool.get().unwrap();
 
     let full_path = match valid_recvd_path(full_path.as_str().to_string()) {
         Err(_) => return Err(convert_to_rejection(Error::invalid_path())),
@@ -61,7 +76,7 @@ pub async fn read_from_db(
     let query = table
         .select(long_link) // get long link
         .filter(short_link.eq(full_path.as_str())) // where short_link == path
-        .first::<String>(&mut db_conn)
+        .first::<String>(&mut conn)
         .map_err(convert_to_rejection)?;
 
     let payload: TinyLink = TinyLink {
