@@ -84,7 +84,8 @@ pub async fn read_from_db(full_path: FullPath) -> Result<impl Reply, Rejection> 
         short_link: full_path,
     };
     let uri = payload.long_link.parse::<Uri>().unwrap();
-    Ok(Box::new(warp::redirect::temporary(uri)))
+    // Ok(Box::new(warp::redirect::temporary(uri)))
+    Ok(Box::new(warp::redirect::redirect(uri)))
 }
 
 /// Used for GET Requests
@@ -103,8 +104,8 @@ pub fn valid_recvd_path(mut path: String) -> Result<String, ()> {
 /// Checks if received data has valid
 ///
 /// returns error if no "url" field is supplied or if Url::parse fails
-pub fn parse_form(long_url: &str) -> Result<Url, Rejection> {
-    match Url::parse(long_url) {
+pub fn parse_form(long_url: &str) -> Result<Uri, Rejection> {
+    match long_url.parse::<Uri>() {
         Ok(url) => Ok(url),
         Err(err) => Err(convert_to_rejection(err)),
     }

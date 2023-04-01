@@ -3,6 +3,7 @@ use diesel::{
     result::{DatabaseErrorKind, Error as DieselError},
 };
 
+use hyper::http::uri::InvalidUri;
 use serde_json::json;
 use std::convert::Infallible;
 use url::ParseError;
@@ -174,6 +175,12 @@ impl From<r2d2::Error> for Error {
 }
 impl From<ParseError> for Error {
     fn from(msg: ParseError) -> Self {
+        Error::custom(msg.to_string(), StatusCode::BAD_REQUEST)
+    }
+}
+
+impl From<InvalidUri> for Error {
+    fn from(msg: InvalidUri) -> Self {
         Error::custom(msg.to_string(), StatusCode::BAD_REQUEST)
     }
 }
