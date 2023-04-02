@@ -6,8 +6,6 @@ extern crate diesel;
 mod models;
 mod schema;
 
-use crate::db::{connect_to_db, Pool};
-use crate::error::handle_rejection;
 mod db;
 mod error;
 mod routes;
@@ -19,6 +17,7 @@ extern crate serde_json;
 
 use dotenvy::dotenv;
 
+use crate::error::handle_rejection;
 use std::env;
 use std::net::SocketAddr;
 use warp::Filter;

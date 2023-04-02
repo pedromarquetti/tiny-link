@@ -1,7 +1,6 @@
 use hyper::{StatusCode, Uri};
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::json;
-use url::Url;
 use warp::{path::FullPath, Rejection, Reply};
 
 use crate::{
