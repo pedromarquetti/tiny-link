@@ -1,10 +1,5 @@
 pub(crate) mod api;
-use crate::{
-    db::Pool,
-    error::{convert_to_rejection, Error},
-};
 
-use r2d2::Error as R2D2Err;
 use warp::{Filter, Rejection, Reply};
 
 /// Routing table for API
@@ -14,6 +9,7 @@ pub fn builder() -> impl Filter<Extract = impl Reply, Error = Rejection> {
         .and_then(api::read_from_db);
 
     let api_post_new_short_link = warp::post()
+        .and(warp::body::content_length_limit(1024 * 16))
         .and(warp::body::json())
         .and_then(api::create_link);
 
