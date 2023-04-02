@@ -69,11 +69,11 @@ pub struct Error {
 
 impl Error {
     /// Invalid received POST request forms!
-    pub fn invalid_forms() -> Self {
+    pub fn invalid_forms<S: Into<String>>(msg: S) -> Self {
         Self {
             kind: ErrorKind::InvalidForm,
             status_code: StatusCode::BAD_REQUEST,
-            msg: None,
+            msg: Some(msg.into()),
         }
     }
     /// Invalid Path for get requests
@@ -128,6 +128,8 @@ impl Error {
             error!("{}", log);
         }
 
+        let curr_msg = &self.msg;
+
         // response body
         let body: Box<dyn Reply> = match &self.kind {
             ErrorKind::InvalidPath => Box::new(reply::json(
@@ -138,9 +140,7 @@ impl Error {
             }
             ErrorKind::Database => Box::new(reply::json(&json!({"error":self.msg}
             ))),
-            ErrorKind::InvalidForm => Box::new(reply::json(
-                &json!({ "error": "Invalid received forms, expected JSON with \"long_url\" " }),
-            )),
+            ErrorKind::InvalidForm => Box::new(reply::json(&json!({ "error": curr_msg }))),
 
             ErrorKind::Custom(msg) => Box::new(reply::json(&json!({ "error": msg }))),
         };
@@ -173,14 +173,17 @@ impl From<r2d2::Error> for Error {
         Error::database(value.to_string())
     }
 }
+
+/// Error while trying to parse Uri, this is a invalid form
 impl From<ParseError> for Error {
     fn from(msg: ParseError) -> Self {
-        Error::custom(msg.to_string(), StatusCode::BAD_REQUEST)
+        Error::invalid_forms(msg.to_string())
     }
 }
 
+/// Error while trying to parse Uri, this is a invalid form
 impl From<InvalidUri> for Error {
     fn from(msg: InvalidUri) -> Self {
-        Error::custom(msg.to_string(), StatusCode::BAD_REQUEST)
+        Error::invalid_forms(msg.to_string())
     }
 }
