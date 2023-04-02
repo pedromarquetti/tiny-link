@@ -138,8 +138,7 @@ impl Error {
             ErrorKind::UniqueViolation => {
                 Box::new(reply::json(&json!({"error":"field not unique!"})))
             }
-            ErrorKind::Database => Box::new(reply::json(&json!({"error":self.msg}
-            ))),
+            ErrorKind::Database => Box::new(reply::json(&json!({ "error": curr_msg }))),
             ErrorKind::InvalidForm => Box::new(reply::json(&json!({ "error": curr_msg }))),
 
             ErrorKind::Custom(msg) => Box::new(reply::json(&json!({ "error": msg }))),
