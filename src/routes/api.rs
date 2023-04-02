@@ -1,11 +1,11 @@
 use hyper::{StatusCode, Uri};
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::json;
-use url::{ParseError, Url};
+use url::Url;
 use warp::{path::FullPath, Rejection, Reply};
 
 use crate::{
-    db::{connect_to_db, DbConnection, Link, Pool, R2D2Err, TinyLink},
+    db::{connect_to_db, Link, Pool, R2D2Err, TinyLink},
     db_url,
     error::{convert_to_rejection, Error},
 };
@@ -101,12 +101,14 @@ pub fn valid_recvd_path(mut path: String) -> Result<String, ()> {
     Ok(path)
 }
 
-/// Checks if received data has valid
+/// Checks if received data has valid, the server only accepts HTTP or HTTPS schemas
 ///
 /// returns error if no "url" field is supplied or if Url::parse fails
 pub fn parse_form(long_url: &str) -> Result<Uri, Rejection> {
-    match long_url.parse::<Uri>() {
-        Ok(url) => Ok(url),
-        Err(err) => Err(convert_to_rejection(err)),
+    let parse = long_url.parse::<Uri>().map_err(convert_to_rejection)?;
+
+    if parse.scheme_str() == Some("http") || parse.scheme_str() == Some("https") {
+        return Ok(parse);
     }
+    return Err(Error::invalid_forms("Form URI is not 'https' or 'http'").into());
 }
