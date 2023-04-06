@@ -90,7 +90,7 @@ pub async fn read_from_db(full_path: FullPath) -> Result<impl Reply, Rejection> 
 /// Used for GET Requests
 ///
 /// Checks if specified path matches requirements
-pub fn valid_recvd_path(mut path: String) -> Result<String, ()> {
+fn valid_recvd_path(mut path: String) -> Result<String, ()> {
     // removing '/' from the recvd path
     path.remove(0);
     if path.len() <= 5 {
@@ -103,7 +103,7 @@ pub fn valid_recvd_path(mut path: String) -> Result<String, ()> {
 /// Checks if received data has valid, the server only accepts HTTP or HTTPS schemas
 ///
 /// returns error if no "url" field is supplied or if Url::parse fails
-pub fn parse_form(long_url: &str) -> Result<Uri, Rejection> {
+fn parse_form(long_url: &str) -> Result<Uri, Rejection> {
     let parse = long_url.parse::<Uri>().map_err(convert_to_rejection)?;
 
     if parse.scheme_str() == Some("http") || parse.scheme_str() == Some("https") {
