@@ -1,4 +1,5 @@
-pub(crate) mod api;
+mod api;
+mod ui;
 
 use warp::{Filter, Rejection, Reply};
 
