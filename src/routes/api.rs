@@ -4,25 +4,17 @@ use serde_json::json;
 use warp::{path::FullPath, Rejection, Reply};
 
 use crate::{
-    db::{connect_to_db, Link, Pool, R2D2Err, TinyLink},
+    db::{connect_to_db, DbConnection, Link, Pool, R2D2Err, TinyLink},
     db_url,
     error::{convert_to_rejection, Error},
 };
 use diesel::prelude::*;
 
 /// writes received long URL to db, returns short Url that will be echoed to user
-pub async fn create_link(new_link: Link) -> Result<impl Reply, Rejection> {
+pub async fn create_link(new_link: Link, ok_conn: DbConnection) -> Result<impl Reply, Rejection> {
     use crate::schema::tiny_link;
 
-    // getting pool from connect_to_db
-    let pool: Result<Pool, R2D2Err> = connect_to_db(db_url());
-
-    // reject error if connect_to_db is R2D2Err
-    if let Err(e) = pool {
-        return Err(convert_to_rejection(e));
-    }
-    let pool = pool.unwrap();
-    let mut conn = pool.get().unwrap();
+    let mut conn = ok_conn.map_err(convert_to_rejection)?;
 
     if let Err(e) = parse_form(&new_link.long_url) {
         return Err(e);
@@ -52,18 +44,13 @@ pub async fn create_link(new_link: Link) -> Result<impl Reply, Rejection> {
 }
 
 /// Queries db on GET request with 6-character id to find related long link
-pub async fn read_from_db(full_path: FullPath) -> Result<impl Reply, Rejection> {
+pub async fn read_from_db(
+    full_path: FullPath,
+    ok_conn: DbConnection,
+) -> Result<impl Reply, Rejection> {
     use crate::schema::tiny_link::{long_link, short_link, table};
 
-    // getting pool from connect_to_db
-    let pool: Result<Pool, R2D2Err> = connect_to_db(db_url());
-
-    // reject error if connect_to_db is R2D2Err
-    if let Err(e) = pool {
-        return Err(convert_to_rejection(e));
-    }
-    let pool = pool.unwrap();
-    let mut conn = pool.get().unwrap();
+    let mut conn = ok_conn.map_err(convert_to_rejection)?;
 
     let full_path = match valid_recvd_path(full_path.as_str().to_string()) {
         Err(_) => return Err(convert_to_rejection(Error::invalid_path())),

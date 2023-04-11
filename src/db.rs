@@ -6,12 +6,14 @@ use diesel::{
     pg::PgConnection,
     r2d2::{ConnectionManager, Pool as R2D2Pool},
 };
+use warp::Rejection;
 
 pub type R2D2Err = r2d2::Error;
 pub type Pool = R2D2Pool<ConnectionManager<PgConnection>>;
-pub type DbConnection = PooledConnection<ConnectionManager<PgConnection>>;
-// pub type DbConnection = Result<PooledConnection<ConnectionManager<PgConnection>>, R2D2Err>;
+// pub type DbConnection = PooledConnection<ConnectionManager<PgConnection>>;
+pub type DbConnection = Result<PooledConnection<ConnectionManager<PgConnection>>, R2D2Err>;
 
+use crate::error::convert_to_rejection;
 use crate::schema::tiny_link;
 
 #[derive(Queryable, Serialize, Debug, Deserialize)]
@@ -28,11 +30,12 @@ pub struct TinyLink {
 }
 
 /// Generates new connection pool to db
-pub fn connect_to_db(url: String) -> Result<Pool, R2D2Err> {
+pub fn connect_to_db(url: String) -> Result<Pool, Rejection> {
     let manager = ConnectionManager::<PgConnection>::new(url);
 
     // Pool::new(manager)
     Pool::builder()
         .connection_timeout(Duration::from_secs(1))
         .build(manager)
+        .map_err(convert_to_rejection)
 }

@@ -17,10 +17,11 @@ extern crate serde_json;
 
 use dotenvy::dotenv;
 
+use crate::db::{connect_to_db, Pool};
 use crate::error::handle_rejection;
 use std::env;
 use std::net::SocketAddr;
-use warp::Filter;
+use warp::{Filter, Rejection};
 
 const DEFAULT_DATABASE_URL: &'static str = "postgresql://postgres@localhost:5432";
 
@@ -29,7 +30,7 @@ pub fn db_url() -> String {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Rejection> {
     // using
     // cargo run' to log events
     // or
@@ -42,8 +43,9 @@ async fn main() {
     env_logger::init(); // initializes pretty logger
 
     dotenv().ok(); // checks for .env file
+    let db_pool: Pool = connect_to_db(db_url())?;
 
-    let routes = routes::builder().recover(handle_rejection).boxed();
+    let routes = routes::builder(db_pool).recover(handle_rejection).boxed();
 
     // address used by the server
     let address: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
@@ -51,4 +53,5 @@ async fn main() {
     info!("running server at {} ", address);
 
     warp::serve(routes).bind(address).await;
+    Ok(())
 }
