@@ -4,8 +4,7 @@ use serde_json::json;
 use warp::{path::FullPath, Rejection, Reply};
 
 use crate::{
-    db::{connect_to_db, DbConnection, Link, Pool, R2D2Err, TinyLink},
-    db_url,
+    db::{DbConnection, Link, TinyLink},
     error::{convert_to_rejection, Error},
 };
 use diesel::prelude::*;

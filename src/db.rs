@@ -10,7 +10,6 @@ use warp::Rejection;
 
 pub type R2D2Err = r2d2::Error;
 pub type Pool = R2D2Pool<ConnectionManager<PgConnection>>;
-// pub type DbConnection = PooledConnection<ConnectionManager<PgConnection>>;
 pub type DbConnection = Result<PooledConnection<ConnectionManager<PgConnection>>, R2D2Err>;
 
 use crate::error::convert_to_rejection;
