@@ -52,8 +52,6 @@ pub async fn create_link(new_link: Link) -> Result<impl Reply, Rejection> {
 }
 
 /// Queries db on GET request with 6-character id to find related long link
-///
-/// Tries t
 pub async fn read_from_db(full_path: FullPath) -> Result<impl Reply, Rejection> {
     use crate::schema::tiny_link::{long_link, short_link, table};
 
