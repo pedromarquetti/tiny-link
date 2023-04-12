@@ -1,7 +1,7 @@
 use hyper::{StatusCode, Uri};
 use rand::{distributions::Alphanumeric, Rng};
 use serde_json::json;
-use warp::{path::FullPath, Rejection, Reply};
+use warp::{Rejection, Reply};
 
 use crate::{
     db::{DbConnection, Link, TinyLink},
@@ -44,27 +44,27 @@ pub async fn create_link(new_link: Link, ok_conn: DbConnection) -> Result<impl R
 
 /// Queries db on GET request with 6-character id to find related long link
 pub async fn read_from_db(
-    full_path: FullPath,
+    recvd_path: String,
     ok_conn: DbConnection,
 ) -> Result<impl Reply, Rejection> {
     use crate::schema::tiny_link::{long_link, short_link, table};
 
     let mut conn = ok_conn.map_err(convert_to_rejection)?;
 
-    let full_path = match valid_recvd_path(full_path.as_str().to_string()) {
+    let current_path = match valid_recvd_path(recvd_path) {
         Err(_) => return Err(convert_to_rejection(Error::invalid_path())),
         Ok(full_path) => full_path,
     };
 
     let query = table
         .select(long_link) // get long link
-        .filter(short_link.eq(full_path.as_str())) // where short_link == path
+        .filter(short_link.eq(current_path.as_str())) // where short_link == path
         .first::<String>(&mut conn)
         .map_err(convert_to_rejection)?;
 
     let payload: TinyLink = TinyLink {
         long_link: query,
-        short_link: full_path,
+        short_link: current_path,
     };
     let uri = payload.long_link.parse::<Uri>().unwrap();
     // Ok(Box::new(warp::redirect::temporary(uri)))
@@ -74,9 +74,8 @@ pub async fn read_from_db(
 /// Used for GET Requests
 ///
 /// Checks if specified path matches requirements
-fn valid_recvd_path(mut path: String) -> Result<String, ()> {
+fn valid_recvd_path(path: String) -> Result<String, ()> {
     // removing '/' from the recvd path
-    path.remove(0);
     if path.len() <= 5 {
         error!("Invalid Path! {}({})", &path, &path.len());
         return Err(());
