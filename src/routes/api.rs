@@ -6,6 +6,7 @@ use warp::{Rejection, Reply};
 use crate::{
     db::{DbConnection, Link, TinyLink},
     error::{convert_to_rejection, Error},
+    routes::ui,
 };
 use diesel::prelude::*;
 
@@ -46,13 +47,17 @@ pub async fn create_link(new_link: Link, ok_conn: DbConnection) -> Result<impl R
 pub async fn read_from_db(
     recvd_path: String,
     ok_conn: DbConnection,
-) -> Result<impl Reply, Rejection> {
+    // ) -> Result<impl Reply, Rejection> {
+) -> Result<Box<dyn Reply>, Rejection> {
     use crate::schema::tiny_link::{long_link, short_link, table};
 
     let mut conn = ok_conn.map_err(convert_to_rejection)?;
 
     let current_path = match valid_recvd_path(recvd_path) {
-        Err(_) => return Err(convert_to_rejection(Error::invalid_path())),
+        Err(_) => {
+            // return Err(convert_to_rejection(Error::invalid_path()))
+            return Ok(Box::new(ui::serve_other("404.html").await?));
+        }
         Ok(full_path) => full_path,
     };
 

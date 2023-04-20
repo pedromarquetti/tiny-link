@@ -1,12 +1,12 @@
 mod api;
 mod ui;
 
-use warp::{path, Filter, Rejection, Reply};
+use warp::{path, reply::Response, Filter, Rejection, Reply};
 
 use crate::db::Pool;
 
 /// Routing table for API
-pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejection> {
+pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     let pool_filter = warp::any().map(move || pool.get());
 
     // use path to redirect to corresponding url
@@ -25,7 +25,10 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
         .and(pool_filter.clone())
         .and_then(api::create_link);
 
+    // ui endpoints
+    let serve_index = warp::get().and(warp::path::end()).and_then(ui::serve_index);
+
     let api_endpoints = api_get_short_link.or(api_post_new_short_link);
 
-    api_endpoints
+    serve_index.or(api_endpoints)
 }
