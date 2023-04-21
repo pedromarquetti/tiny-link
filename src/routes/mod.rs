@@ -15,8 +15,6 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
         // the server will only accept non empty paths
         .and(warp::path::end())
         .and(pool_filter.clone())
-        // TODO:
-        // fix multiple requests being sent here if user sends GET req. to root folder
         .and_then(api::read_from_db);
 
     // create new link

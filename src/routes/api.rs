@@ -48,6 +48,13 @@ pub async fn read_from_db(
     ok_conn: DbConnection,
 ) -> Result<Box<dyn Reply>, Rejection> {
     use crate::schema::tiny_link::{long_link, short_link, table};
+    let mime = mime_guess::from_path(&recvd_path);
+
+    // received request has file
+    if !mime.is_empty() {
+        // serve file normally, don't treat it like a short-link id
+        return Ok(Box::new(ui::serve_other(&recvd_path).await?));
+    }
 
     let mut conn = ok_conn.map_err(convert_to_rejection)?;
 
@@ -65,6 +72,7 @@ pub async fn read_from_db(
     {
         Ok(link) => link,
         Err(DieselError::NotFound) => {
+            debug!("NOT FOUND");
             return Ok(Box::new(ui::serve_other("404.html").await?));
         }
         Err(err) => return Err(convert_to_rejection(err)),
