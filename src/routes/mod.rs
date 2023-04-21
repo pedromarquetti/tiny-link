@@ -10,12 +10,12 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
     let pool_filter = warp::any().map(move || pool.get());
 
     // use path to redirect to corresponding url
-    let api_get_short_link = warp::get()
+    let api_redirect = warp::get()
         .and(warp::path::param())
         // the server will only accept non empty paths
         .and(warp::path::end())
         .and(pool_filter.clone())
-        .and_then(api::read_from_db);
+        .and_then(api::redirect_to_link);
 
     // create new link
     let api_post_new_short_link = warp::post()
@@ -28,7 +28,7 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
     // ui endpoints
     let serve_index = warp::get().and(warp::path::end()).and_then(ui::serve_index);
 
-    let api_endpoints = api_get_short_link.or(api_post_new_short_link);
+    let api_endpoints = api_redirect.or(api_post_new_short_link);
 
     serve_index.or(api_endpoints)
 }

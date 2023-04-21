@@ -43,7 +43,7 @@ pub async fn create_link(new_link: Link, ok_conn: DbConnection) -> Result<impl R
 }
 
 /// Queries db on GET request with 6-character id to find related long link
-pub async fn read_from_db(
+pub async fn redirect_to_link(
     recvd_path: String,
     ok_conn: DbConnection,
 ) -> Result<Box<dyn Reply>, Rejection> {
