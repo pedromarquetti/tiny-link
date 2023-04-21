@@ -56,9 +56,11 @@ pub async fn read_from_db(
         return Ok(Box::new(ui::serve_other(&recvd_path).await?));
     }
 
+    // received path is not JS or CSS (or does not have known MIME)
+    // user is probably trying to query db, continuing...
     let mut conn = ok_conn.map_err(convert_to_rejection)?;
 
-    let current_path = match valid_recvd_path(recvd_path) {
+    let current_path = match validate_path(recvd_path) {
         Err(_) => {
             return Ok(Box::new(ui::serve_other("404.html").await?));
         }
@@ -72,7 +74,6 @@ pub async fn read_from_db(
     {
         Ok(link) => link,
         Err(DieselError::NotFound) => {
-            debug!("NOT FOUND");
             return Ok(Box::new(ui::serve_other("404.html").await?));
         }
         Err(err) => return Err(convert_to_rejection(err)),
@@ -89,13 +90,9 @@ pub async fn read_from_db(
 /// Used for GET Requests
 ///
 /// Checks if specified path matches requirements
-fn valid_recvd_path(path: String) -> Result<String, ()> {
-    // removing '/' from the recvd path
-    match !mime_guess::from_path(&path).is_empty() || path.len() <= 5 {
-        true => {
-            return Err(());
-        }
-        false => (),
+fn validate_path(path: String) -> Result<String, ()> {
+    if path.len() <= 5 || path.len() >= 7 {
+        return Err(());
     }
     Ok(path)
 }
