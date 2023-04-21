@@ -50,7 +50,7 @@ pub async fn read_from_db(
     use crate::schema::tiny_link::{long_link, short_link, table};
 
     let mut conn = ok_conn.map_err(convert_to_rejection)?;
-    debug!("getting path {}", &recvd_path);
+
     let current_path = match valid_recvd_path(recvd_path) {
         Err(_) => {
             return Ok(Box::new(ui::serve_other("404.html").await?));
