@@ -8,7 +8,7 @@ use crate::{
     error::{convert_to_rejection, Error},
     routes::ui,
 };
-use diesel::prelude::*;
+use diesel::{prelude::*, result::Error as DieselError};
 
 /// writes received long URL to db, returns short Url that will be echoed to user
 pub async fn create_link(new_link: Link, ok_conn: DbConnection) -> Result<impl Reply, Rejection> {
@@ -34,7 +34,6 @@ pub async fn create_link(new_link: Link, ok_conn: DbConnection) -> Result<impl R
         // inserting TinyLink with long + short url
         .values::<&TinyLink>(&payload)
         .returning(tiny_link::short_link)
-        // .get_result(&mut connection)
         .execute(&mut conn)
         .map_err(convert_to_rejection)?;
     Ok(warp::reply::with_status(
@@ -47,32 +46,35 @@ pub async fn create_link(new_link: Link, ok_conn: DbConnection) -> Result<impl R
 pub async fn read_from_db(
     recvd_path: String,
     ok_conn: DbConnection,
-    // ) -> Result<impl Reply, Rejection> {
 ) -> Result<Box<dyn Reply>, Rejection> {
     use crate::schema::tiny_link::{long_link, short_link, table};
 
     let mut conn = ok_conn.map_err(convert_to_rejection)?;
-
+    debug!("getting path {}", &recvd_path);
     let current_path = match valid_recvd_path(recvd_path) {
         Err(_) => {
-            // return Err(convert_to_rejection(Error::invalid_path()))
             return Ok(Box::new(ui::serve_other("404.html").await?));
         }
         Ok(full_path) => full_path,
     };
 
-    let query = table
+    let query = match table
         .select(long_link) // get long link
         .filter(short_link.eq(current_path.as_str())) // where short_link == path
         .first::<String>(&mut conn)
-        .map_err(convert_to_rejection)?;
+    {
+        Ok(link) => link,
+        Err(DieselError::NotFound) => {
+            return Ok(Box::new(ui::serve_other("404.html").await?));
+        }
+        Err(err) => return Err(convert_to_rejection(err)),
+    };
 
     let payload: TinyLink = TinyLink {
         long_link: query,
         short_link: current_path,
     };
     let uri = payload.long_link.parse::<Uri>().unwrap();
-    // Ok(Box::new(warp::redirect::temporary(uri)))
     Ok(Box::new(warp::redirect::redirect(uri)))
 }
 
@@ -81,9 +83,11 @@ pub async fn read_from_db(
 /// Checks if specified path matches requirements
 fn valid_recvd_path(path: String) -> Result<String, ()> {
     // removing '/' from the recvd path
-    if path.len() <= 5 {
-        error!("Invalid Path! {}({})", &path, &path.len());
-        return Err(());
+    match !mime_guess::from_path(&path).is_empty() || path.len() <= 5 {
+        true => {
+            return Err(());
+        }
+        false => (),
     }
     Ok(path)
 }
