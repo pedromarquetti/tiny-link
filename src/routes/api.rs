@@ -97,7 +97,7 @@ fn validate_path(path: String) -> Result<String, ()> {
     Ok(path)
 }
 
-/// Checks if received data has valid, the server only accepts HTTP or HTTPS schemas
+/// Checks if received data is valid, the server only accepts HTTP or HTTPS schemas
 ///
 /// returns error if no "url" field is supplied or if Url::parse fails
 fn parse_form(long_url: &str) -> Result<Uri, Rejection> {
