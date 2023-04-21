@@ -151,11 +151,11 @@ impl Error {
 
 impl reject::Reject for Error {}
 impl From<DieselError> for Error {
-    fn from(value: DieselError) -> Self {
-        match value {
-            DieselError::DatabaseError(kind, err) => match kind {
+    fn from(diesel_err: DieselError) -> Self {
+        match diesel_err {
+            DieselError::DatabaseError(kind, error_msg) => match kind {
                 DatabaseErrorKind::UniqueViolation => Error::unique_violation(),
-                _ => Error::database(err.message()),
+                _ => Error::database(error_msg.message()),
             },
             err => Error::database(err.to_string()),
         }
