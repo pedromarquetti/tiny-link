@@ -48,7 +48,6 @@ pub async fn handle_rejection(err: Rejection) -> Result<WithStatus<Box<dyn Reply
 enum ErrorKind {
     Database,
     InvalidForm,
-    InvalidPath,
     Custom(String),
     UniqueViolation,
 }
@@ -74,14 +73,6 @@ impl Error {
             kind: ErrorKind::InvalidForm,
             status_code: StatusCode::BAD_REQUEST,
             msg: Some(msg.into()),
-        }
-    }
-    /// Invalid Path for get requests
-    pub fn invalid_path() -> Self {
-        Self {
-            kind: ErrorKind::InvalidPath,
-            status_code: StatusCode::BAD_REQUEST,
-            msg: None,
         }
     }
     /// Database Error
@@ -132,9 +123,6 @@ impl Error {
 
         // response body
         let body: Box<dyn Reply> = match &self.kind {
-            ErrorKind::InvalidPath => Box::new(reply::json(
-                &json!({"error":"invalid path! path must be 6 characters long"}),
-            )),
             ErrorKind::UniqueViolation => {
                 Box::new(reply::json(&json!({"error":"field not unique!"})))
             }
