@@ -8,7 +8,31 @@
 		<title>Tiny Link</title>
 	</head>
 	<body>
-		oi
+		<div class="main">
+			<div class="content-container">
+				<section class="modal hidden">
+					<div class="top-bar">
+						<p class="modal-title">placeholder error/info text</p>
+						<button type="button" class="close-modal">X</button>
+					</div>
+					<div class="modal-text-container">
+						<p class="modal-text">placeholder msg</p>
+					</div>
+				</section>
+				<div class="form-container">
+					<form id="submit-long-link">
+						<input
+							class="long-link-input"
+							placeholder="http://pudim.com.br"
+							type="text"
+							id="long-url"
+							required="required"
+						/>
+						<button type="submit">Tinyfy</button>
+					</form>
+				</div>
+			</div>
+		</div>
 	</body>
 	<script src="./index.js" defer></script>
 </html>
