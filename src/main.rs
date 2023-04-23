@@ -45,7 +45,17 @@ async fn main() -> Result<(), Rejection> {
     dotenv().ok(); // checks for .env file
     let db_pool: Pool = connect_to_db(db_url())?;
 
-    let routes = routes::builder(db_pool).recover(handle_rejection).boxed();
+    let routes = routes::builder(db_pool)
+        .recover(handle_rejection)
+        .boxed()
+        .and(warp::addr::remote())
+        .map(|routes, address: Option<SocketAddr>| {
+            match address {
+                Some(ok_address) => info!("Incoming Request from: {:?}", ok_address),
+                None => error!("No SocketAddress Found"),
+            }
+            return routes;
+        });
 
     // address used by the server
     let address: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
