@@ -33,7 +33,7 @@ async function create_link(e) {
 
 	let long_link = e.target[0].value;
 	let payload = { long_url: long_link };
-	let res = await fetch("/api/create/", {
+	let res = await fetch("/api/link/create/", {
 		method: "POST",
 		body: JSON.stringify(payload),
 		headers: {
