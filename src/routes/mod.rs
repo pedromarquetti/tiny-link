@@ -1,7 +1,7 @@
 mod api;
 mod ui;
 
-use warp::{path, reply::Response, Filter, Rejection, Reply};
+use warp::{path, Filter, Rejection, Reply};
 
 use crate::db::Pool;
 
@@ -20,7 +20,7 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
     // create new link
     let api_post_new_short_link = warp::post()
         .and(warp::body::content_length_limit(1024 * 16))
-        .and(path!("api" / "create"))
+        .and(path!("api" / "link " / "create"))
         .and(warp::body::json())
         .and(pool_filter.clone())
         .and_then(api::create_link);

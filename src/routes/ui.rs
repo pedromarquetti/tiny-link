@@ -1,5 +1,5 @@
 use hyper::{http::HeaderValue, StatusCode};
-use rust_embed::{EmbeddedFile, RustEmbed};
+use rust_embed::RustEmbed;
 use warp::{reply::Response, Rejection, Reply};
 
 use crate::error::{convert_to_rejection, Error};
