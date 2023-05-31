@@ -46,6 +46,8 @@ pub async fn handle_rejection(err: Rejection) -> Result<WithStatus<Box<dyn Reply
 #[derive(Debug)]
 /// Types of error that can occur
 enum ErrorKind {
+    InvalidUsrPwd,
+
     Database,
     InvalidForm,
     Custom(String),
@@ -67,6 +69,14 @@ pub struct Error {
 }
 
 impl Error {
+    /// returns err if user OR pwd auth fails
+    pub fn invalid_usr_pwd<S: Into<String>>(msg: S) -> Self {
+        Self {
+            kind: ErrorKind::InvalidUsrPwd,
+            status_code: StatusCode::UNAUTHORIZED,
+            msg: Some(msg.into()),
+        }
+    }
     /// Invalid received POST request forms!
     pub fn invalid_forms<S: Into<String>>(msg: S) -> Self {
         Self {
@@ -126,6 +136,9 @@ impl Error {
             ErrorKind::UniqueViolation => {
                 Box::new(reply::json(&json!({"error":"field not unique!"})))
             }
+            ErrorKind::InvalidUsrPwd => {
+                Box::new(reply::json(&json!({"error":"invalid user OR password!"})))
+            }
             ErrorKind::Database => Box::new(reply::json(&json!({ "error": curr_msg }))),
             ErrorKind::InvalidForm => Box::new(reply::json(&json!({ "error": curr_msg }))),
 
@@ -172,5 +185,10 @@ impl From<ParseError> for Error {
 impl From<InvalidUri> for Error {
     fn from(msg: InvalidUri) -> Self {
         Error::invalid_forms(msg.to_string())
+    }
+}
+impl From<bcrypt::BcryptError> for Error {
+    fn from(value: bcrypt::BcryptError) -> Self {
+        Error::invalid_usr_pwd(value.to_string())
     }
 }
