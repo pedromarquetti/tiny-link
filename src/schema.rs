@@ -10,9 +10,9 @@ diesel::table! {
 
 diesel::table! {
     users (id) {
-        id -> Int4,
+        id -> Nullable<Int4>,
         user_name -> Text,
-        user_role -> Varchar,
+        user_role -> Nullable<Varchar>,
         user_pwd -> Text,
     }
 }
