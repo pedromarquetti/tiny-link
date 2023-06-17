@@ -2,7 +2,8 @@ const create_link_form = document.getElementById("submit-long-link");
 const modal = document.getElementById("modal");
 const close_modal_button = document.getElementById("close-modal");
 const modal_title = document.getElementById("modal-title");
-const modal_body = document.getElementById("modal-text");
+const modal_text = document.getElementById("modal-text");
+const link_redirect = document.getElementById("link_redirect");
 
 create_link_form.addEventListener("submit", create_link);
 
@@ -41,7 +42,7 @@ async function create_modal(type, title, message) {
 
 			// and this content
 			modal_title.textContent = title;
-			modal_body.textContent = message;
+			modal_text.textContent = message;
 
 			break;
 		case "ok":
@@ -49,7 +50,7 @@ async function create_modal(type, title, message) {
 			close_modal_button.classList.add("ok");
 
 			modal_title.textContent = title;
-			modal_body.textContent = message;
+			modal_text.innerHTML = message;
 
 			break;
 
@@ -57,7 +58,7 @@ async function create_modal(type, title, message) {
 			modal.classList.add("error");
 			close_modal_button.classList.add("error");
 
-			modal_body.textContent = "Error!";
+			modal_text.textContent = "Error!";
 			modal_title.textContent = "Invalid modal type";
 
 			break;
@@ -86,10 +87,18 @@ async function create_link(e) {
 	if (!res.ok) {
 		await create_modal("err", "Error!", error);
 	} else {
+		// link_redirect.setAttribute("href", data.short_link);
+		// link_redirect.setAttribute("target", "_blank");
+
+		// link_redirect.innerText = "click here to access it";
+		const host = window.location.origin;
+		const a_tag = `<a target='_blank' href=${host}/${data.short_link}>click here to open it!</a>`;
+		// console.log(window.location);
+
 		await create_modal(
 			"ok",
 			"Done!",
-			`Your short-link ID is: ${data.short_link}`
+			`Your short-link ID is: ${data.short_link}, ${a_tag}`
 		);
 	}
 }
