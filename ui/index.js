@@ -87,13 +87,8 @@ async function create_link(e) {
 	if (!res.ok) {
 		await create_modal("err", "Error!", error);
 	} else {
-		// link_redirect.setAttribute("href", data.short_link);
-		// link_redirect.setAttribute("target", "_blank");
-
-		// link_redirect.innerText = "click here to access it";
 		const host = window.location.origin;
 		const a_tag = `<a target='_blank' href=${host}/${data.short_link}>click here to open it!</a>`;
-		// console.log(window.location);
 
 		await create_modal(
 			"ok",
