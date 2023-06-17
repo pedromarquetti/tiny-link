@@ -14,6 +14,10 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
 
     // user endpoints
     let create_user = warp::post()
+        .and(path("api"))
+        .and(path("user"))
+        .and(path("create"))
+        .and(path::end())
         .and(warp::body::content_length_limit(1024 * 10))
         .and(path!("api" / "user" / "create"))
         .and(warp::body::json())
@@ -30,8 +34,11 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
 
     // create new link
     let api_new_short_link = warp::post()
+        .and(path("api"))
+        .and(path("link"))
+        .and(path("create"))
+        .and(path::end())
         .and(warp::body::content_length_limit(1024 * 16))
-        .and(path!("api" / "link " / "create"))
         .and(warp::body::json())
         .and(pool_filter.clone())
         .and_then(api::create_link);
@@ -41,5 +48,5 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
 
     let api_endpoints = api_redirect.or(api_new_short_link);
 
-    serve_index.or(api_endpoints).or(create_user)
+    serve_index.or(api_endpoints)
 }
