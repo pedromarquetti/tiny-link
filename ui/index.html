@@ -8,29 +8,38 @@
 		<title>Tiny Link</title>
 	</head>
 	<body>
-		<div class="main">
-			<div class="content-container">
-				<section class="modal hidden">
-					<div class="top-bar">
-						<p class="modal-title">placeholder error/info text</p>
-						<button type="button" class="close-modal">X</button>
-					</div>
-					<div class="modal-text-container">
-						<p class="modal-text">placeholder msg</p>
-					</div>
-				</section>
-				<div class="form-container">
-					<form id="submit-long-link">
-						<input
-							class="long-link-input"
-							placeholder="http://pudim.com.br"
-							type="text"
-							id="long-url"
-							required="required"
-						/>
-						<button type="submit">Tinyfy</button>
-					</form>
-				</div>
+		<dialog id="modal">
+			<header>
+				<h2 id="modal-title"></h2>
+				<button
+					formmethod="dialog"
+					type="submit"
+					formnovalidate
+					id="close-modal"
+				>
+					X
+				</button>
+			</header>
+			<section>
+				<h3 id="modal-text"></h3>
+			</section>
+
+			<div class="modal-body"></div>
+		</dialog>
+		<div class="content-container">
+			<h1>Welcome to my Link Shortener</h1>
+
+			<div class="form-container">
+				<form id="submit-long-link">
+					<input
+						class="long-link-input"
+						placeholder="http://pudim.com.br"
+						type="text"
+						id="long-url"
+						required="required"
+					/>
+					<button type="submit">Tinyfy</button>
+				</form>
 			</div>
 		</div>
 	</body>

@@ -1,34 +1,72 @@
 const create_link_form = document.getElementById("submit-long-link");
-const close_modal = document.querySelector(".close-modal");
-const modal = document.querySelector(".modal");
-const modal_title = document.querySelector(".modal-title");
-const modal_text = document.querySelector(".modal-text");
+const modal = document.getElementById("modal");
+const close_modal_button = document.getElementById("close-modal");
+const modal_title = document.getElementById("modal-title");
+const modal_body = document.getElementById("modal-text");
 
 create_link_form.addEventListener("submit", create_link);
 
-close_modal.addEventListener("click", () => {
-	modal.classList.remove("fail");
-	modal.classList.remove("ok");
-	modal.classList.add("hidden");
+function close_modal() {
+	modal.close();
+	// removes close class if present
+	modal.classList.remove("close");
+	// removes the animation event listener, modal was closed
+	modal.removeEventListener("animationend", close_modal);
+}
+
+// if user clicks X btn inside modal
+close_modal_button.addEventListener("click", (e) => {
+	// run close_modal
+	modal.addEventListener("animationend", close_modal);
+	// add "close" class to <dialog> (this will trigger CSS animations)
+	modal.classList.add("close");
+	e.preventDefault();
 });
 
+create_link_form.addEventListener("submit", create_link);
+
+/// modal.show() will replace the <dialog> element with <dialog open>
 async function create_modal(type, title, message) {
-	modal.classList.remove("fail");
-	modal.classList.remove("ok");
-	if (type === "err") {
-		modal_title.textContent = title;
-		modal_text.textContent = message;
-		modal.classList.add("fail");
-		modal.classList.remove("hidden");
-	} else {
-		modal_title.textContent = title;
-		modal_text.textContent = message;
-		modal.classList.add("ok");
-		modal.classList.remove("hidden");
+	// removing classes from modal / modal_button
+	modal.className = "";
+	close_modal_button.className = "";
+
+	//spawning modal
+	modal.show();
+	switch (type) {
+		case "err":
+			// with these classes
+			modal.classList.add("error");
+			close_modal_button.classList.add("error");
+
+			// and this content
+			modal_title.textContent = title;
+			modal_body.textContent = message;
+
+			break;
+		case "ok":
+			modal.classList.add("ok");
+			close_modal_button.classList.add("ok");
+
+			modal_title.textContent = title;
+			modal_body.textContent = message;
+
+			break;
+
+		default:
+			modal.classList.add("error");
+			close_modal_button.classList.add("error");
+
+			modal_body.textContent = "Error!";
+			modal_title.textContent = "Invalid modal type";
+
+			break;
 	}
 }
 
+/// main function to handle form that will be sent to server
 async function create_link(e) {
+	// don't reload page on form submit
 	e.preventDefault();
 
 	let long_link = e.target[0].value;
@@ -54,6 +92,4 @@ async function create_link(e) {
 			`Your short-link ID is: ${data.short_link}`
 		);
 	}
-
-	console.log(short_link);
 }
