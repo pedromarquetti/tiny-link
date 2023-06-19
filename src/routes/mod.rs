@@ -1,9 +1,6 @@
 mod api;
-mod auth;
 mod ui;
-mod user;
 
-use auth::auth;
 use warp::{path, Filter, Rejection, Reply};
 
 use crate::db::Pool;
@@ -11,18 +8,6 @@ use crate::db::Pool;
 /// Routing table for API
 pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     let pool_filter = warp::any().map(move || pool.get());
-
-    // user endpoints
-    let create_user = warp::post()
-        .and(path("api"))
-        .and(path("user"))
-        .and(path("create"))
-        .and(path::end())
-        .and(warp::body::content_length_limit(1024 * 10))
-        .and(path!("api" / "user" / "create"))
-        .and(warp::body::json())
-        .and(pool_filter.clone())
-        .and_then(user::create_user);
 
     // use path to redirect to corresponding url
     let api_redirect = warp::get()
