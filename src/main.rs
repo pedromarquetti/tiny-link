@@ -20,7 +20,8 @@ use dotenvy::dotenv;
 use crate::db::{connect_to_db, Pool};
 use crate::error::handle_rejection;
 use std::env;
-use std::net::SocketAddr;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::str::FromStr;
 use warp::{Filter, Rejection};
 
 const DEFAULT_DATABASE_URL: &'static str = "postgresql://postgres@localhost:5432";
@@ -58,7 +59,13 @@ async fn main() -> Result<(), Rejection> {
         });
 
     // address used by the server
-    let address: SocketAddr = "0.0.0.0:3000".parse::<SocketAddr>().unwrap();
+    let ip = env::var("SERVER_IP").unwrap_or("0.0.0.0".into());
+    let port = env::var("SERVER_PORT").unwrap_or("3000".into());
+
+    let address = SocketAddr::new(
+        IpAddr::from_str(&ip).expect("expected valid IP address"),
+        port.parse::<u16>().expect("expected valid SERVER_PORT"),
+    );
 
     info!("running server at {} ", address);
 
