@@ -20,7 +20,7 @@ use dotenvy::dotenv;
 use crate::db::{connect_to_db, Pool};
 use crate::error::handle_rejection;
 use std::env;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
 use warp::{Filter, Rejection};
 
