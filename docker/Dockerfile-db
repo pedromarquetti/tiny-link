@@ -1,4 +1,4 @@
 FROM postgres
 
 # Create the table on start-up
-ADD schemas/tiny_link.sql /docker-entrypoint-initdb.d/
+ADD migrations/tiny_link/up.sql /docker-entrypoint-initdb.d/
