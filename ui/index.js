@@ -27,7 +27,7 @@ close_modal_button.addEventListener("click", (e) => {
 create_link_form.addEventListener("submit", create_link);
 
 /// modal.show() will replace the <dialog> element with <dialog open>
-async function create_modal(type, title, message) {
+async function create_interaction_modal(type, title, message) {
 	// removing classes from modal / modal_button
 	modal.className = "";
 	close_modal_button.className = "";
@@ -85,12 +85,12 @@ async function create_link(e) {
 	const { error, data } = short_link;
 
 	if (!res.ok) {
-		await create_modal("err", "Error!", error);
+		await create_interaction_modal("err", "Error!", error);
 	} else {
 		const host = window.location.origin;
 		const a_tag = `<a target='_blank' href=${host}/${data.short_link}>click here to open it!</a>`;
 
-		await create_modal(
+		await create_interaction_modal(
 			"ok",
 			"Done!",
 			`Your short-link ID is: ${data.short_link}, ${a_tag}`
