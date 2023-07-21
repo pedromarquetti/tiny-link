@@ -3,12 +3,12 @@ extern crate serde_derive;
 #[macro_use]
 extern crate diesel;
 
-mod models;
-mod schema;
-
 mod db;
 mod error;
+mod jwt;
+mod models;
 mod routes;
+mod schema;
 
 #[macro_use]
 extern crate log;
@@ -37,6 +37,7 @@ async fn main() -> Result<(), Rejection> {
     // or
     // systemfd --no-pid -s http::3030 -- cargo watch -x 'run'
     // for autoreload
+
     if env::var_os("RUST_LOG").is_none() {
         env::set_var("RUST_LOG", "tiny_link")
     }

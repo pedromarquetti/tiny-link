@@ -29,12 +29,20 @@ pub struct TinyLink {
     pub short_link: String,
 }
 
-#[derive(Queryable, Insertable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Identifiable)]
 #[diesel(table_name = users)]
 /// user_role has to be "admin", "user" or "guest"
 pub struct User {
+    pub id: Option<i32>,
     pub user_name: String,
-    pub user_role: String,
+    pub user_role: Option<String>,
+    pub user_pwd: String,
+}
+#[derive(Queryable, Insertable, Debug, Serialize, Deserialize, Identifiable)]
+#[diesel(table_name = users)]
+pub struct LoginUser {
+    pub id: Option<i32>,
+    pub user_name: String,
     pub user_pwd: String,
 }
 

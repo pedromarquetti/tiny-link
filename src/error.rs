@@ -3,7 +3,7 @@ use diesel::{
     result::{DatabaseErrorKind, Error as DieselError},
 };
 
-use hyper::http::uri::InvalidUri;
+use hyper::{header::InvalidHeaderValue, http::uri::InvalidUri};
 use serde_json::json;
 use std::convert::Infallible;
 use url::ParseError;
@@ -94,11 +94,11 @@ impl Error {
         }
     }
 
-    pub fn unique_violation() -> Self {
+    pub fn unique_violation<S: Into<String>>(msg: S) -> Self {
         Self {
             kind: ErrorKind::UniqueViolation,
             status_code: StatusCode::CONFLICT,
-            msg: None,
+            msg: Some(msg.into()),
         }
     }
 
@@ -155,7 +155,7 @@ impl From<DieselError> for Error {
     fn from(diesel_err: DieselError) -> Self {
         match diesel_err {
             DieselError::DatabaseError(kind, error_msg) => match kind {
-                DatabaseErrorKind::UniqueViolation => Error::unique_violation(),
+                DatabaseErrorKind::UniqueViolation => Error::unique_violation(error_msg.message()),
                 _ => Error::database(error_msg.message()),
             },
             err => Error::database(err.to_string()),
@@ -190,5 +190,21 @@ impl From<InvalidUri> for Error {
 impl From<bcrypt::BcryptError> for Error {
     fn from(value: bcrypt::BcryptError) -> Self {
         Error::invalid_usr_pwd(value.to_string())
+    }
+}
+impl From<jsonwebtoken::errors::Error> for Error {
+    fn from(value: jsonwebtoken::errors::Error) -> Self {
+        Error::custom(
+            format!("JWT Error! {}", value.to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )
+    }
+}
+impl From<InvalidHeaderValue> for Error {
+    fn from(value: InvalidHeaderValue) -> Self {
+        Error::custom(
+            format!("INTERNAL SERVER ERROR! {}", value.to_string()),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        )
     }
 }
