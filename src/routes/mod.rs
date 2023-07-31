@@ -4,13 +4,23 @@ mod ui;
 mod user;
 
 use auth::auth;
+use serde_json::json;
 use warp::{path, Filter, Rejection, Reply};
 
 use crate::db::Pool;
 
+async fn ping() -> Result<impl Reply, Rejection> {
+    return Ok(warp::reply::json(&json!({"ping":"success!"})));
+}
 /// Routing table for API
 pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
     let pool_filter = warp::any().map(move || pool.get());
+
+    let ping = warp::any()
+        .and(path("api"))
+        .and(path("ping"))
+        .and(path::end())
+        .and_then(ping);
 
     // user endpoints
     let handle_login = warp::post()
@@ -73,7 +83,8 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
         .or(protected_endpoints)
         .or(create_user)
         .or(link_endpoints)
-        .or(serve_index);
+        .or(serve_index)
+        .or(ping);
 
     routes.clone()
 }
