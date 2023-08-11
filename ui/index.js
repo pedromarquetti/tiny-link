@@ -5,8 +5,6 @@ const modal_title = document.getElementById("modal-title");
 const modal_text = document.getElementById("modal-text");
 const link_redirect = document.getElementById("link_redirect");
 
-create_link_form.addEventListener("submit", create_link);
-
 function close_modal() {
 	modal.close();
 	// removes close class if present
@@ -24,13 +22,10 @@ close_modal_button.addEventListener("click", (e) => {
 	e.preventDefault();
 });
 
-create_link_form.addEventListener("submit", create_link);
-
 /// modal.show() will replace the <dialog> element with <dialog open>
 async function create_interaction_modal(type, title, message) {
 	// removing classes from modal / modal_button
 	modal.className = "";
-	close_modal_button.className = "";
 
 	//spawning modal
 	modal.show();
@@ -64,6 +59,8 @@ async function create_interaction_modal(type, title, message) {
 			break;
 	}
 }
+
+create_link_form.addEventListener("submit", create_link);
 
 /// main function to handle form that will be sent to server
 async function create_link(e) {
