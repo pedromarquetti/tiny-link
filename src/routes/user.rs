@@ -46,7 +46,7 @@ pub async fn user_login(
                 );
 
                 let json_resp =
-                    warp::reply::json(&json!({ "success": format!("login success!",) }));
+                    warp::reply::json(&json!({ "message": format!("login success!",) }));
 
                 return Ok(warp::reply::with_header(json_resp, SET_COOKIE, cookie));
             } else {
@@ -84,7 +84,7 @@ pub async fn user_create(rcvd_payload: User, conn: DbConnection) -> Result<impl 
     match query {
         Ok(_) => Ok(warp::reply::with_status(
             warp::reply::json(&json!({
-                "success": format!("User {} created!", rcvd_payload.user_name)
+                "message": format!("User {} created!", rcvd_payload.user_name)
             })),
             StatusCode::CREATED,
         )),
@@ -122,7 +122,7 @@ pub async fn admin_create(rcvd_payload: User, conn: DbConnection) -> Result<impl
     match query {
         Ok(_) => Ok(warp::reply::with_status(
             warp::reply::json(&json!({
-                "success": format!("Admin {} created!", rcvd_payload.user_name)
+                "message": format!("Admin {} created!", rcvd_payload.user_name)
             })),
             StatusCode::CREATED,
         )),

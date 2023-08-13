@@ -37,7 +37,7 @@ pub async fn create_link(new_link: Link, ok_conn: DbConnection) -> Result<impl R
         .execute(&mut conn)
         .map_err(convert_to_rejection)?;
     Ok(warp::reply::with_status(
-        warp::reply::json(&json!({ "data": payload })),
+        warp::reply::json(&json!({ "message": payload })),
         StatusCode::CREATED,
     ))
 }
