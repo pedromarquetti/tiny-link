@@ -14,7 +14,7 @@ html {
 	flex-direction: column;
 	flex-wrap: wrap;
 	align-content: space-around;
-	justify-content: space-evenly;
+	justify-content: flex-start;
 	align-items: center;
 	text-align: center;
 }
@@ -24,7 +24,6 @@ html {
 input {
 	border-radius: 28px;
 	-webkit-box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
-	-moz-box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
 	box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
 	box-sizing: border-box;
 	border: black;
@@ -37,7 +36,6 @@ input {
 }
 button {
 	-webkit-box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
-	-moz-box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
 	box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
 	border-radius: 28px;
 	border: 1px solid #521aa1;
@@ -65,6 +63,8 @@ li {
 	list-style-type: none;
 }
 .form-container {
+	margin: 4em;
+
 	display: flex;
 	flex-wrap: wrap;
 	flex-direction: column;
@@ -73,35 +73,73 @@ li {
 	align-items: stretch;
 	width: 100%;
 }
-#modal {
+
+#top-nav {
+	width: 100%;
+	display: flex;
+	flex-direction: row-reverse;
+	flex-wrap: wrap;
+	align-content: flex-end;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+/* info/login modal styling */
+dialog::backdrop {
+	backdrop-filter: blur(10px);
+}
+dialog {
+	/* margin-top: 2em; */
 	box-sizing: border-box;
 	min-height: 100px;
 	border-radius: 10px;
 
+	background: #4f1b97;
+
 	-webkit-box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
-	-moz-box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
 	box-shadow: 17px 16px 40px -11px rgba(0, 0, 0, 0.75);
 }
-#modal header {
+dialog header {
 	display: flex;
 	flex-wrap: wrap;
 	flex-direction: row;
+	justify-content: space-evenly;
+	align-items: center;
+}
+.login-register-form {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	align-items: center;
+}
+.hidden {
+	display: none;
+}
+.info {
+	background: #0000f1;
+	border: #0e1283;
 }
 .error {
 	background: #ad0c0c;
 	border: #830e0e;
 }
-button.error:hover {
-	background-color: #8e1616;
-}
 .ok {
 	background: #17c511;
 	border: #33710f;
 }
+button.error:hover {
+	background-color: #8e1616;
+}
 button.ok:hover {
 	background-color: #33710f;
+}
+button.info:hover {
+	background: #0e1283;
+}
+dialog#login-register {
+	height: 90%;
+	width: 80%;
 }
 
 /* modal animation */

@@ -12,26 +12,85 @@
 		<title>Tiny Link</title>
 	</head>
 	<body>
-		<dialog id="modal">
-			<header>
-				<h2 id="modal-title"></h2>
-				<button
-					formmethod="dialog"
-					type="submit"
-					formnovalidate
-					id="close-modal"
-				>
-					X
-				</button>
-			</header>
-			<section>
-				<p id="modal-text"></p>
-			</section>
-		</dialog>
+		<nav id="top-nav">
+			<button id="login-register-button">login/register</button>
+		</nav>
 		<h1>Welcome to my Link Shortener</h1>
 
 		<div class="form-container">
-			<form id="submit-long-link">
+			<dialog class="modal">
+				<header>
+					<h2 id="modal-title"></h2>
+					<button
+						formmethod="dialog"
+						type="submit"
+						formnovalidate
+						id="close-modal"
+					>
+						X
+					</button>
+				</header>
+				<div id="info-modal" class="hidden">
+					<section>
+						<p id="modal-text"></p>
+					</section>
+				</div>
+				<div id="login-register-modal" class="hidden">
+					<!-- login/register buttons -->
+					<div class="login-register">
+						<button onclick="change_user_form('login')">Login</button>
+						<button onclick="change_user_form('register')">Register</button>
+					</div>
+
+					<!-- user register form -->
+					<form id="user-register-form" class="hidden" method="dialog">
+						<input
+							id="register-username"
+							required
+							placeholder="Username"
+							type="text"
+						/>
+						<input
+							id="register-password"
+							required
+							placeholder="Password"
+							type="password"
+						/>
+						<button type="submit">Register new user</button>
+						<button
+							formmethod="submit"
+							type="submit"
+							formnovalidate
+							class="cancel-button"
+						>
+							Cancel
+						</button>
+					</form>
+
+					<!-- user login form -->
+					<form id="user-login-form" class="hidden" method="dialog">
+						<input
+							id="login-username"
+							required
+							placeholder="Username"
+							type="text"
+						/>
+						<input
+							id="login-password"
+							required
+							placeholder="Password"
+							type="password"
+						/>
+						<button type="submit">Login</button>
+						<button class="cancel-button">Cancel</button>
+					</form>
+				</div>
+				<footer>
+					<h3 id="login-register-message"></h3>
+				</footer>
+			</dialog>
+
+			<form method="dialog" id="submit-long-link">
 				<input
 					class="long-link-input"
 					placeholder="http://pudim.com.br"
