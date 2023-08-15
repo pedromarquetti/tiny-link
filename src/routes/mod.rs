@@ -25,20 +25,14 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
     // user endpoints
     let handle_login = warp::post()
         .and(warp::body::content_length_limit(1024 * 10))
-        .and(path("api"))
-        .and(path("user"))
-        .and(path("login"))
-        .and(path::end())
+        .and(path!("api" / "user" / "login"))
         .and(warp::body::json())
         .and(pool_filter.clone())
         .and_then(user::user_login);
 
     let create_admin = warp::post()
         .and(warp::body::content_length_limit(1024 * 10))
-        .and(path("api"))
-        .and(path("admin"))
-        .and(path("create"))
-        .and(path::end())
+        .and(path!("api" / "admin" / "create"))
         .and(auth())
         .and(warp::body::json())
         .and(pool_filter.clone())
@@ -46,10 +40,7 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
 
     let create_user = warp::post()
         .and(warp::body::content_length_limit(1024 * 10))
-        .and(path("api"))
-        .and(path("user"))
-        .and(path("create"))
-        .and(path::end())
+        .and(path!("api" / "user" / "create"))
         .and(warp::body::json())
         .and(pool_filter.clone())
         .and_then(user::user_create);
@@ -64,10 +55,7 @@ pub fn builder(pool: Pool) -> impl Filter<Extract = impl Reply, Error = Rejectio
 
     // create new link
     let create_link = warp::post()
-        .and(path("api"))
-        .and(path("link"))
-        .and(path("create"))
-        .and(path::end())
+        .and(path!("api" / "link" / "create"))
         .and(warp::body::content_length_limit(1024 * 16))
         .and(warp::body::json())
         .and(pool_filter.clone())
