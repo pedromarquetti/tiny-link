@@ -1,4 +1,4 @@
-use std::format;
+use std::{fmt::format, format};
 
 use bcrypt::{hash, verify};
 use diesel::{
@@ -17,6 +17,11 @@ use crate::{
     jwt::generate_token,
 };
 
+/// Handles user login
+///
+/// Requires LoginUser struct as param to parse received data.
+///
+/// Requires a valid DbConnection///
 pub async fn user_login(
     login_user: LoginUser,
     conn: DbConnection,
@@ -37,7 +42,6 @@ pub async fn user_login(
             if verify(&login_user.user_pwd, &result.user_pwd).map_err(convert_to_rejection)? {
                 let token = generate_token(result).map_err(convert_to_rejection)?;
                 let cookie = format!(
-                    // "jwt={}; Path=/; HttpOnly; Max-Age=1209600; Secure; SameSite=None; Domain=http://192.168.1.115:3000",
                     // "jwt={}; Path=/; HttpOnly; Max-Age=1209600; Secure; SameSite=Lax;",
 
                     // the below jwt works in dev server + HTTP
@@ -50,14 +54,17 @@ pub async fn user_login(
 
                 return Ok(warp::reply::with_header(json_resp, SET_COOKIE, cookie));
             } else {
-                return Err(Error::invalid_usr_pwd("invalid user or password").into());
+                // incorrect password! show invalid user or password
+                return Err(Error::user_validation_err("invalid user or password!").into());
             }
         }
         // user not fund
         Err(DieselError::NotFound) => {
-            return Err(Error::invalid_usr_pwd("invalid user or password").into());
+            return Err(Error::user_validation_err("invalid user or password!").into());
         }
-        Err(_) => return Err(Error::database("internal server error!").into()),
+        Err(e) => {
+            return Err(Error::database(format!("Internal server error: {}", e.to_string())).into())
+        }
     }
 }
 
@@ -65,9 +72,9 @@ pub async fn user_login(
 pub async fn user_create(rcvd_payload: User, conn: DbConnection) -> Result<impl Reply, Rejection> {
     use crate::schema::users::dsl::*;
     if !valid_pwd(&rcvd_payload.user_pwd) {
-        return Err(convert_to_rejection(Error::invalid_usr_pwd(
-            "password must be at least 8 characters long!",
-        )));
+        return Err(
+            Error::user_validation_err("password must be at least 8 characters long!").into(),
+        );
     }
 
     let mut conn = conn.map_err(convert_to_rejection)?;
@@ -91,12 +98,17 @@ pub async fn user_create(rcvd_payload: User, conn: DbConnection) -> Result<impl 
         Err(error_kind) => match error_kind {
             // enforcing uniqueness of "user_name" field
             DieselError::DatabaseError(db_err_kind, msg) => match db_err_kind {
-                DatabaseErrorKind::UniqueViolation => {
-                    Err(Error::unique_violation(rcvd_payload.user_name).into())
-                }
+                DatabaseErrorKind::UniqueViolation => Err(Error::unique_violation(format!(
+                    "User {} already exists. {}",
+                    rcvd_payload.user_name,
+                    msg.message(),
+                ))
+                .into()),
                 _ => Err(Error::database(msg.message()).into()),
             },
-            _ => Err(Error::database("internal server error! ").into()),
+            err => {
+                Err(Error::database(format!("internal server error! {}", err.to_string())).into())
+            }
         },
     }
 }
@@ -104,9 +116,9 @@ pub async fn user_create(rcvd_payload: User, conn: DbConnection) -> Result<impl 
 pub async fn admin_create(rcvd_payload: User, conn: DbConnection) -> Result<impl Reply, Rejection> {
     use crate::schema::users::dsl::*;
     if !valid_pwd(&rcvd_payload.user_pwd) {
-        return Err(convert_to_rejection(Error::invalid_usr_pwd(
-            "password must be at least 8 characters long!",
-        )));
+        return Err(
+            Error::user_validation_err("password must be at least 8 characters long!").into(),
+        );
     }
 
     let mut conn = conn.map_err(convert_to_rejection)?;

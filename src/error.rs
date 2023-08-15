@@ -69,8 +69,8 @@ pub struct Error {
 }
 
 impl Error {
-    /// returns err if user OR pwd auth fails
-    pub fn invalid_usr_pwd<S: Into<String>>(msg: S) -> Self {
+    /// Errors that can occur with user login/register
+    pub fn user_validation_err<S: Into<String>>(msg: S) -> Self {
         Self {
             kind: ErrorKind::InvalidUsrPwd,
             status_code: StatusCode::UNAUTHORIZED,
@@ -133,12 +133,8 @@ impl Error {
 
         // response body
         let body: Box<dyn Reply> = match &self.kind {
-            ErrorKind::UniqueViolation => {
-                Box::new(reply::json(&json!({"error":"field not unique!"})))
-            }
-            ErrorKind::InvalidUsrPwd => {
-                Box::new(reply::json(&json!({"error":"invalid user OR password!"})))
-            }
+            ErrorKind::UniqueViolation => Box::new(reply::json(&json!({ "error": curr_msg }))),
+            ErrorKind::InvalidUsrPwd => Box::new(reply::json(&json!({ "error": curr_msg }))),
             ErrorKind::Database => Box::new(reply::json(&json!({ "error": curr_msg }))),
             ErrorKind::InvalidForm => Box::new(reply::json(&json!({ "error": curr_msg }))),
 
@@ -189,7 +185,7 @@ impl From<InvalidUri> for Error {
 }
 impl From<bcrypt::BcryptError> for Error {
     fn from(value: bcrypt::BcryptError) -> Self {
-        Error::invalid_usr_pwd(value.to_string())
+        Error::user_validation_err(value.to_string())
     }
 }
 impl From<jsonwebtoken::errors::Error> for Error {
