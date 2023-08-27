@@ -8,15 +8,12 @@ use crate::{
 };
 
 pub fn auth() -> impl Filter<Extract = (), Error = Rejection> + Clone {
-    // warp::cookie::warp::cookie::<String>("token")
     warp::cookie::optional::<String>("jwt")
         .and_then(check_header)
         .untuple_one()
 }
-// async fn check_header(header: Option<String>) -> Result<(), Rejection> {
-async fn check_header(cookie: Option<String>) -> Result<(), Rejection> {
-    // async fn check_header(cookie: String) -> Result<(), Rejection> {
 
+async fn check_header(cookie: Option<String>) -> Result<(), Rejection> {
     if let Some(cookie_val) = cookie {
         let token: TokenData<UserClaims> =
             validate_token(cookie_val).map_err(convert_to_rejection)?;
