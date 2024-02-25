@@ -24,10 +24,8 @@ use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
 use warp::{Filter, Rejection};
 
-const DEFAULT_DATABASE_URL: &'static str = "postgresql://postgres@localhost:5432";
-
 pub fn db_url() -> String {
-    env::var("DATABASE_URL").unwrap_or(String::from(DEFAULT_DATABASE_URL))
+    env::var("DATABASE_URL").expect("DATABASE_URL not set")
 }
 
 #[tokio::main]
